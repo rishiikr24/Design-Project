@@ -1,0 +1,111 @@
+{
+  "xsappname": "saas-transformation",
+  "tenant-mode": "dedicated",
+  "description": "Security descriptor for Enterprise SaaS Transformation Platform",
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.Admin",
+      "description": "Platform owner: Manage catalog, risk templates, companies, and users"
+    },
+    {
+      "name": "$XSAPPNAME.Manager",
+      "description": "Enterprise IT Lead: Run assessments, set criteria weights, approve plans, view dashboard"
+    },
+    {
+      "name": "$XSAPPNAME.Analyst",
+      "description": "Enterprise Analyst: Enter assessment data, run evaluations and risk analysis"
+    },
+    {
+      "name": "$XSAPPNAME.Viewer",
+      "description": "Executive Stakeholder: Read-only access to recommendations, risks, and roadmap"
+    }
+  ],
+  "attributes": [
+    {
+      "name": "company",
+      "description": "Company ID for multi-tenant data scoping",
+      "valueType": "string"
+    }
+  ],
+  "role-templates": [
+    {
+      "name": "AdminRole",
+      "description": "Administrator Role Template",
+      "scope-references": [
+        "$XSAPPNAME.Admin",
+        "$XSAPPNAME.Manager",
+        "$XSAPPNAME.Analyst",
+        "$XSAPPNAME.Viewer"
+      ]
+    },
+    {
+      "name": "ManagerRole",
+      "description": "Transformation Manager Role Template",
+      "scope-references": [
+        "$XSAPPNAME.Manager",
+        "$XSAPPNAME.Analyst",
+        "$XSAPPNAME.Viewer"
+      ],
+      "attribute-references": [
+        {
+          "name": "company"
+        }
+      ]
+    },
+    {
+      "name": "AnalystRole",
+      "description": "Analyst Role Template",
+      "scope-references": [
+        "$XSAPPNAME.Analyst",
+        "$XSAPPNAME.Viewer"
+      ],
+      "attribute-references": [
+        {
+          "name": "company"
+        }
+      ]
+    },
+    {
+      "name": "ViewerRole",
+      "description": "Executive Viewer Role Template",
+      "scope-references": [
+        "$XSAPPNAME.Viewer"
+      ],
+      "attribute-references": [
+        {
+          "name": "company"
+        }
+      ]
+    }
+  ],
+  "role-collections": [
+    {
+      "name": "Transformation_Admin",
+      "description": "Full administrative control of SaaS Transformation Platform",
+      "role-template-references": [
+        "$XSAPPNAME.AdminRole"
+      ]
+    },
+    {
+      "name": "Transformation_Manager",
+      "description": "Manager access to run assessments, set weights, and approve roadmaps",
+      "role-template-references": [
+        "$XSAPPNAME.ManagerRole"
+      ]
+    },
+    {
+      "name": "Transformation_Analyst",
+      "description": "Analyst access to input assessments and run scoring evaluations",
+      "role-template-references": [
+        "$XSAPPNAME.AnalystRole"
+      ]
+    },
+    {
+      "name": "Transformation_Viewer",
+      "description": "Executive read-only dashboard access",
+      "role-template-references": [
+        "$XSAPPNAME.ViewerRole"
+      ]
+    }
+  ]
+}

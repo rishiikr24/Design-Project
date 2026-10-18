@@ -1,0 +1,99 @@
+_schema-version: '3.1'
+ID: saas-transformation
+version: 1.0.0
+description: "SAP-based Enterprise SaaS Transformation Platform"
+parameters:
+  enable-parallel-deployments: true
+
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm install --production
+
+modules:
+  # CAP Server Module
+  - name: saas-transformation-srv
+    type: nodejs
+    path: srv
+    parameters:
+      buildpack: nodejs_buildpack
+    build-parameters:
+      builder: npm
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: saas-transformation-db
+      - name: saas-transformation-auth
+
+  # Database Deployer Module
+  - name: saas-transformation-db-deployer
+    type: hdb
+    path: db
+    parameters:
+      buildpack: nodejs_buildpack
+    requires:
+      - name: saas-transformation-db
+
+  # App Router Module
+  - name: saas-transformation-approuter
+    type: nodejs
+    path: app/approuter
+    parameters:
+      disk-quota: 256M
+      memory: 256M
+    requires:
+      - name: saas-transformation-auth
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-binding
+          url: ~{srv-url}
+          forwardAuthToken: true
+      - name: saas-transformation-html5-repo-runtime
+
+  # HTML5 UI Deployer
+  - name: saas-transformation-ui-deployer
+    type: com.sap.application.content
+    path: .
+    requires:
+      - name: saas-transformation-html5-repo-host
+        parameters:
+          content-target: true
+    build-parameters:
+      build-result: app/saas-ui/webapp
+
+resources:
+  # SAP HANA Cloud HDI Container
+  - name: saas-transformation-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana
+      service-plan: hdi-shared
+
+  # SAP XSUAA Authentication Service
+  - name: saas-transformation-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: saas-transformation-${space}
+        tenant-mode: dedicated
+
+  # SAP HTML5 Application Repository Host
+  - name: saas-transformation-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+
+  # SAP HTML5 Application Repository Runtime
+  - name: saas-transformation-html5-repo-runtime
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-runtime

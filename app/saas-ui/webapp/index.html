@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAP Enterprise SaaS Transformation Platform</title>
+  <meta name="description" content="SAP-based Decision-Support and Transformation-Planning Platform for Enterprise SaaS Adoption">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body class="theme-dark">
+  <!-- Top Shell Bar (SAP Fiori Horizon Header) -->
+  <header class="sap-shellbar" id="shellbar">
+    <div class="shell-left">
+      <div class="sap-logo-badge">
+        <svg class="sap-logo" viewBox="0 0 40 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 0H40V24H0V0Z" fill="#0070F2" rx="4"/>
+          <text x="6" y="17" fill="#FFFFFF" font-family="'Inter', sans-serif" font-weight="900" font-size="14" letter-spacing="1">SAP</text>
+        </svg>
+      </div>
+      <div class="shell-product-info">
+        <h1 class="shell-title">Enterprise SaaS Transformation Platform</h1>
+        <span class="shell-sub">BTP | CAP | HANA Cloud | Fiori Framework</span>
+      </div>
+    </div>
+
+    <div class="shell-right">
+      <!-- Reference Case 1-Click Button -->
+      <button class="btn btn-outline-cyan" id="btn-load-ref-case" title="Load Representative Case (1,000 employees, legacy ERP, high security)">
+        <span class="btn-icon">⚡</span> Load Reference Case
+      </button>
+
+      <!-- Active Company Selector -->
+      <div class="shell-tenant-selector">
+        <label for="tenant-select" class="sr-only">Company:</label>
+        <span class="tenant-icon">🏢</span>
+        <select id="tenant-select" class="shell-select">
+          <option value="comp-apex-global">Apex Global Enterprises</option>
+          <option value="comp-novasystems">Nova Systems Corp</option>
+        </select>
+      </div>
+
+      <!-- Role Switcher -->
+      <div class="shell-role-selector">
+        <label for="role-select" class="sr-only">Role:</label>
+        <span class="role-badge" id="current-role-badge">Admin</span>
+        <select id="role-select" class="shell-select">
+          <option value="Admin">Role: Admin</option>
+          <option value="Manager">Role: Manager</option>
+          <option value="Analyst">Role: Analyst</option>
+          <option value="Viewer">Role: Viewer (Read-only)</option>
+        </select>
+      </div>
+
+      <!-- Theme Switcher -->
+      <button class="btn-icon-toggle" id="btn-theme-toggle" title="Toggle Light/Dark Theme">
+        <span id="theme-icon">🌙</span>
+      </button>
+
+      <!-- User Profile -->
+      <div class="shell-user" id="user-profile-badge" title="Rishi Kumar (Platform Owner)">
+        <div class="user-avatar">RK</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Secondary Navigation Bar (Core Loop Tabs) -->
+  <nav class="sap-navbar" id="navbar">
+    <div class="nav-container">
+      <button class="nav-tab active" data-tab="dashboard" id="tab-dashboard">
+        <span class="tab-icon">📊</span> Transformation Dashboard
+      </button>
+      <button class="nav-tab" data-tab="assessment" id="tab-assessment">
+        <span class="tab-icon">📋</span> Enterprise Assessment <span class="tab-badge" id="nav-toe-badge">TOE: 78%</span>
+      </button>
+      <button class="nav-tab" data-tab="catalog" id="tab-catalog">
+        <span class="tab-icon">📦</span> SaaS Catalog <span class="tab-pill">10 Products</span>
+      </button>
+      <button class="nav-tab" data-tab="recommendation" id="tab-recommendation">
+        <span class="tab-icon">🎯</span> Recommendation & Compare
+      </button>
+      <button class="nav-tab" data-tab="risks" id="tab-risks">
+        <span class="tab-icon">🛡️</span> Risk Assessment <span class="tab-badge badge-warning" id="nav-risk-badge">High Risk</span>
+      </button>
+      <button class="nav-tab" data-tab="planner" id="tab-planner">
+        <span class="tab-icon">🚀</span> 8-Phase Roadmap <span class="tab-pill" id="nav-phase-badge">Phase 4/8</span>
+      </button>
+      <button class="nav-tab" data-tab="assistant" id="tab-assistant">
+        <span class="tab-icon">🤖</span> AI Transformation Advisor
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Application Body -->
+  <main class="app-main" id="main-content">
+    
+    <!-- Toast Notification Banner -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- ==================== TAB 1: EXECUTIVE DASHBOARD ==================== -->
+    <section class="tab-content active" id="view-dashboard">
+      <div class="page-header">
+        <div>
+          <h2 class="page-title">Executive Transformation Dashboard</h2>
+          <p class="page-subtitle">Real-time SaaS adoption metrics, TOE readiness, multi-criteria recommendations, and migration progress.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-secondary" id="btn-export-report">
+            <span class="btn-icon">📄</span> Export Assessment Report
+          </button>
+          <button class="btn btn-primary" id="btn-refresh-dashboard">
+            <span class="btn-icon">🔄</span> Refresh Telemetry
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Summary Tiles -->
+      <div class="kpi-grid">
+        <!-- Tile 1: Readiness Score -->
+        <div class="kpi-card highlight-blue">
+          <div class="kpi-header">
+            <span class="kpi-title">TOE SaaS Readiness</span>
+            <span class="kpi-pill success" id="dash-readiness-level">High Readiness</span>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="dash-readiness-score">77.5</span>
+            <span class="kpi-unit">/100</span>
+          </div>
+          <div class="kpi-subtext">
+            <span>Tech: <strong id="dash-toe-tech">67.0</strong></span>
+            <span>Org: <strong id="dash-toe-org">85.0</strong></span>
+            <span>Env: <strong id="dash-toe-env">87.0</strong></span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill fill-blue" id="dash-readiness-bar" style="width: 77.5%;"></div>
+          </div>
+        </div>
+
+        <!-- Tile 2: Overall Risk -->
+        <div class="kpi-card highlight-amber">
+          <div class="kpi-header">
+            <span class="kpi-title">Migration Risk Profile</span>
+            <span class="kpi-pill warning" id="dash-risk-level">High Risk</span>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="dash-risk-count">5</span>
+            <span class="kpi-unit">Evaluated Risks</span>
+          </div>
+          <div class="kpi-subtext">
+            <span>Critical: <strong id="dash-risk-crit">2</strong></span>
+            <span>High: <strong id="dash-risk-high">2</strong></span>
+            <span>Medium: <strong id="dash-risk-med">1</strong></span>
+          </div>
+          <div class="risk-badge-strip">
+            <span class="risk-chip crit">Data Loss (20/25)</span>
+            <span class="risk-chip high">Integration (20/25)</span>
+          </div>
+        </div>
+
+        <!-- Tile 3: Legacy Inventory -->
+        <div class="kpi-card highlight-purple">
+          <div class="kpi-header">
+            <span class="kpi-title">Legacy Systems Footprint</span>
+            <span class="kpi-pill purple">On-Premise</span>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="dash-legacy-count">4</span>
+            <span class="kpi-unit">Active Monoliths</span>
+          </div>
+          <div class="kpi-subtext">
+            <span>Users Affected: <strong>1,000+</strong></span>
+            <span>Avg Age: <strong>9.5 yrs</strong></span>
+          </div>
+          <div class="tag-row">
+            <span class="tag">AS/400 Core</span>
+            <span class="tag">Custom CRM</span>
+            <span class="tag">SQL Batch</span>
+          </div>
+        </div>
+
+        <!-- Tile 4: Migration Progress -->
+        <div class="kpi-card highlight-green">
+          <div class="kpi-header">
+            <span class="kpi-title">Transformation Roadmap</span>
+            <span class="kpi-pill info" id="dash-phase-name">Phase 4: Data Migration</span>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="dash-progress-val">32.5</span>
+            <span class="kpi-unit">% Complete</span>
+          </div>
+          <div class="kpi-subtext">
+            <span>Phases: <strong>2/8 Complete</strong></span>
+            <span>Target: <strong>12 Months</strong></span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill fill-green" id="dash-progress-bar" style="width: 32.5%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Two-Column Grid -->
+      <div class="dashboard-grid">
+        <!-- Left: Top Recommended Solution Spotlight -->
+        <div class="card spotlight-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <span class="medal-icon">🥇</span>
+              <div>
+                <h3 class="card-title">Top Recommended SaaS Solution</h3>
+                <span class="card-subtitle">Scored against custom enterprise criteria & constraints</span>
+              </div>
+            </div>
+            <span class="score-badge-large" id="dash-top-score">91.8<small>/100</small></span>
+          </div>
+          <div class="card-body">
+            <div class="product-spotlight-info">
+              <h4 class="spotlight-product-name" id="dash-top-name">SAP S/4HANA Cloud</h4>
+              <span class="spotlight-vendor" id="dash-top-vendor">SAP • Enterprise Resource Planning (ERP)</span>
+              <p class="spotlight-reason" id="dash-top-reason">
+                Outstanding alignment on top-priority Security (30% weight) and Scalability (25% weight). High integration maturity via SAP BTP and OData V4 accommodates legacy AS/400 replacement.
+              </p>
+            </div>
+
+            <!-- Criteria Sub-scores breakdown -->
+            <div class="subscores-list" id="dash-subscores-container">
+              <div class="subscore-item">
+                <div class="subscore-label-row">
+                  <span>Security Fit (30% wt)</span>
+                  <strong id="dash-score-sec">96.0</strong>
+                </div>
+                <div class="progress-bar-bg small"><div class="progress-bar-fill fill-blue" style="width: 96%;"></div></div>
+              </div>
+              <div class="subscore-item">
+                <div class="subscore-label-row">
+                  <span>Scalability Fit (25% wt)</span>
+                  <strong id="dash-score-scale">98.0</strong>
+                </div>
+                <div class="progress-bar-bg small"><div class="progress-bar-fill fill-cyan" style="width: 98%;"></div></div>
+              </div>
+              <div class="subscore-item">
+                <div class="subscore-label-row">
+                  <span>Integration Fit (15% wt)</span>
+                  <strong id="dash-score-int">95.0</strong>
+                </div>
+                <div class="progress-bar-bg small"><div class="progress-bar-fill fill-green" style="width: 95%;"></div></div>
+              </div>
+              <div class="subscore-item">
+                <div class="subscore-label-row">
+                  <span>Cost Fit (20% wt)</span>
+                  <strong id="dash-score-cost">65.0</strong>
+                </div>
+                <div class="progress-bar-bg small"><div class="progress-bar-fill fill-amber" style="width: 65%;"></div></div>
+              </div>
+              <div class="subscore-item">
+                <div class="subscore-label-row">
+                  <span>Features Fit (10% wt)</span>
+                  <strong id="dash-score-feat">98.0</strong>
+                </div>
+                <div class="progress-bar-bg small"><div class="progress-bar-fill fill-purple" style="width: 98%;"></div></div>
+              </div>
+            </div>
+
+            <div class="card-footer-actions">
+              <button class="btn btn-primary" onclick="app.navigateToTab('recommendation')">View Full Rankings & Comparison</button>
+              <button class="btn btn-outline" onclick="app.navigateToTab('planner')">View Phased Roadmap</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Post-Go-Live Monitoring & Risk Distribution -->
+        <div class="dashboard-right-col">
+          <!-- Post-Go-Live Telemetry Card (TD-4) -->
+          <div class="card telemetry-card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Post-Go-Live Value Monitoring</h3>
+                <span class="card-subtitle">Real-time enterprise adoption & efficiency governance</span>
+              </div>
+              <span class="telemetry-live-dot" title="Telemetry Live"></span>
+            </div>
+            <div class="card-body">
+              <div class="telemetry-stats-row">
+                <div class="telemetry-stat">
+                  <div class="stat-number text-success" id="tele-adoption">88.4%</div>
+                  <div class="stat-label">User Adoption Rate</div>
+                  <div class="stat-hint">+12% vs target baseline</div>
+                </div>
+                <div class="telemetry-stat">
+                  <div class="stat-number text-cyan" id="tele-efficiency">+24.6%</div>
+                  <div class="stat-label">Cost Efficiency</div>
+                  <div class="stat-hint">TCO reduction realized</div>
+                </div>
+                <div class="telemetry-stat">
+                  <div class="stat-number text-blue" id="tele-license">92.1%</div>
+                  <div class="stat-label">License Utilization</div>
+                  <div class="stat-hint">Active user allocation</div>
+                </div>
+              </div>
+
+              <div class="telemetry-notes">
+                <span class="info-icon">💡</span>
+                <span>Telemetry data confirmed from SAP BTP Cloud Logging & User Telemetry feeds. No underutilized licenses detected.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Risk Breakdown Card -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Assessed Risk Severity Distribution</h3>
+                <span class="card-subtitle">Probability × Impact exposure across domains</span>
+              </div>
+              <button class="btn btn-sm btn-outline" onclick="app.navigateToTab('risks')">Risk Heatmap</button>
+            </div>
+            <div class="card-body">
+              <div class="risk-distribution-bars" id="dash-risk-distribution-list">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: ENTERPRISE ASSESSMENT WIZARD ==================== -->
+    <section class="tab-content" id="view-assessment">
+      <div class="page-header">
+        <div>
+          <h2 class="page-title">Enterprise Readiness Assessment</h2>
+          <p class="page-subtitle">Guided 5-step wizard capturing organizational profile, infrastructure, legacy systems, and criteria weights.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline" id="btn-save-draft">Save as Draft</button>
+          <button class="btn btn-outline-cyan" id="btn-prefill-ref">Prefill Reference Case</button>
+        </div>
+      </div>
+
+      <!-- Step Indicator Bar -->
+      <div class="wizard-steps" id="wizard-steps">
+        <div class="wizard-step active" data-step="1">
+          <div class="step-num">1</div>
+          <div class="step-label">Company Profile</div>
+        </div>
+        <div class="wizard-step-line"></div>
+        <div class="wizard-step" data-step="2">
+          <div class="step-num">2</div>
+          <div class="step-label">IT Environment</div>
+        </div>
+        <div class="wizard-step-line"></div>
+        <div class="wizard-step" data-step="3">
+          <div class="step-num">3</div>
+          <div class="step-label">Legacy Monoliths</div>
+        </div>
+        <div class="wizard-step-line"></div>
+        <div class="wizard-step" data-step="4">
+          <div class="step-num">4</div>
+          <div class="step-label">Criteria Weights</div>
+        </div>
+        <div class="wizard-step-line"></div>
+        <div class="wizard-step" data-step="5">
+          <div class="step-num">5</div>
+          <div class="step-label">TOE Review & Submit</div>
+        </div>
+      </div>
+
+      <!-- Wizard Form Container -->
+      <div class="card wizard-card">
+        <form id="assessment-form">
+          <!-- Step 1: Enterprise Profile -->
+          <div class="wizard-pane active" id="wizard-pane-1">
+            <h3 class="pane-title">Step 1: Enterprise Profile & Scale</h3>
+            <p class="pane-desc">Basic enterprise metadata used to calibrate organizational adoption capacity.</p>
+            
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="inp-company-name">Company Name *</label>
+                <input type="text" id="inp-company-name" class="form-control" value="Apex Global Enterprises" required>
+              </div>
+              <div class="form-group">
+                <label for="inp-industry">Industry Sector *</label>
+                <select id="inp-industry" class="form-control">
+                  <option value="Manufacturing & Logistics">Manufacturing & Logistics</option>
+                  <option value="Financial Technology">Financial Technology</option>
+                  <option value="Healthcare & Life Sciences">Healthcare & Life Sciences</option>
+                  <option value="Retail & Consumer Goods">Retail & Consumer Goods</option>
+                  <option value="Energy & Utilities">Energy & Utilities</option>
+                  <option value="Public Sector">Public Sector</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="inp-employees">Total Employees *</label>
+                <input type="number" id="inp-employees" class="form-control" value="1000" min="10" max="500000" required>
+                <span class="field-hint">Total workforce headcount requiring software access</span>
+              </div>
+              <div class="form-group">
+                <label for="inp-it-budget">Annual IT Budget ($ USD) *</label>
+                <input type="number" id="inp-it-budget" class="form-control" value="1500000" min="10000" step="10000" required>
+                <span class="field-hint">Total annual technology expenditure</span>
+              </div>
+              <div class="form-group">
+                <label for="inp-region">Headquarters Region</label>
+                <select id="inp-region" class="form-control">
+                  <option value="North America">North America</option>
+                  <option value="EMEA">Europe, Middle East & Africa</option>
+                  <option value="Asia Pacific">Asia Pacific</option>
+                  <option value="Latin America">Latin America</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="inp-assessment-title">Assessment Initiative Title</label>
+                <input type="text" id="inp-assessment-title" class="form-control" value="Core Systems Cloud Modernization">
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: IT Environment & Growth -->
+          <div class="wizard-pane" id="wizard-pane-2">
+            <h3 class="pane-title">Step 2: IT Infrastructure & Constraints</h3>
+            <p class="pane-desc">Identify current hosting topology, security standards, and transformation focus.</p>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="inp-infrastructure">Current Infrastructure Topology *</label>
+                <select id="inp-infrastructure" class="form-control">
+                  <option value="On-premise">On-premise Datacenter / Bare Metal</option>
+                  <option value="Hybrid">Hybrid (On-premise + Colocated)</option>
+                  <option value="Colocated">Colocated Managed Hosting</option>
+                  <option value="Private Cloud">Private Cloud Infrastructure</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="inp-growth-rate">Expected Annual Growth Rate (%) *</label>
+                <input type="number" id="inp-growth-rate" class="form-control" value="18" min="0" max="200" step="1">
+                <span class="field-hint">Business growth rate directly driving user scalability requirements</span>
+              </div>
+              <div class="form-group">
+                <label for="inp-data-sensitivity">Data Sensitivity Classification *</label>
+                <select id="inp-data-sensitivity" class="form-control">
+                  <option value="High">High (PII, Financial, HIPAA, Intellectual Property)</option>
+                  <option value="Medium">Medium (Internal Business Records, Commercial Data)</option>
+                  <option value="Low">Low (Publicly Accessible Operational Information)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="inp-target-category">Target Transformation Area *</label>
+                <select id="inp-target-category" class="form-control">
+                  <option value="All">All Categories (Enterprise-wide Modernization)</option>
+                  <option value="ERP">Enterprise Resource Planning (ERP)</option>
+                  <option value="CRM">Customer Relationship Management (CRM)</option>
+                  <option value="HCM">Human Capital Management (HCM)</option>
+                  <option value="ITSM">IT Service Management (ITSM)</option>
+                  <option value="Productivity">Productivity & Collaboration</option>
+                  <option value="Identity">Identity & Access Governance (IAM)</option>
+                </select>
+              </div>
+              <div class="form-group full-width">
+                <label for="inp-pain-points">Current Operational Pain Points & Bottlenecks</label>
+                <textarea id="inp-pain-points" class="form-control" rows="3">Monolithic legacy ERP maintenance costs, customer data siloed in legacy custom CRM, fragile nightly batch ETL jobs, slow executive reporting cycles.</textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Legacy Applications Inventory (EA-3) -->
+          <div class="wizard-pane" id="wizard-pane-3">
+            <div class="pane-header-with-action">
+              <div>
+                <h3 class="pane-title">Step 3: Legacy Monolithic Systems Inventory</h3>
+                <p class="pane-desc">Catalog active legacy applications to evaluate migration complexity and data loss risk.</p>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-primary" id="btn-add-legacy-app">+ Add Legacy System</button>
+            </div>
+
+            <div class="legacy-apps-table-container">
+              <table class="data-table" id="table-legacy-apps">
+                <thead>
+                  <tr>
+                    <th>Application Name</th>
+                    <th>Business Function</th>
+                    <th>Hosting Topology</th>
+                    <th>Criticality</th>
+                    <th>Active Users</th>
+                    <th>Years in Use</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="legacy-apps-tbody">
+                  <!-- Dynamically populated rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Step 4: Criteria Weightings (EA-4) -->
+          <div class="wizard-pane" id="wizard-pane-4">
+            <div class="pane-header-with-action">
+              <div>
+                <h3 class="pane-title">Step 4: Multi-Criteria Weighting Configuration</h3>
+                <p class="pane-desc">Configure preference weights for SaaS recommendation scoring. <strong>Weights must total exactly 100%</strong>.</p>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline" id="btn-reset-weights">Reset to Defaults (20/30/25/15/10)</button>
+            </div>
+
+            <div class="weights-meter-card">
+              <div class="weights-total-row">
+                <span>Sum of Criteria Weights:</span>
+                <strong class="weights-sum-badge valid" id="weights-sum-badge">100%</strong>
+              </div>
+              <div class="weights-stacked-bar" id="weights-stacked-bar">
+                <div class="weight-segment fill-amber" style="width: 20%;" title="Cost: 20%">Cost 20%</div>
+                <div class="weight-segment fill-blue" style="width: 30%;" title="Security: 30%">Security 30%</div>
+                <div class="weight-segment fill-cyan" style="width: 25%;" title="Scalability: 25%">Scalability 25%</div>
+                <div class="weight-segment fill-green" style="width: 15%;" title="Integration: 15%">Integration 15%</div>
+                <div class="weight-segment fill-purple" style="width: 10%;" title="Features: 10%">Features 10%</div>
+              </div>
+            </div>
+
+            <div class="sliders-grid">
+              <div class="slider-group">
+                <div class="slider-header">
+                  <label for="weight-cost">Cost Fit (TCO & Licensing)</label>
+                  <span class="slider-val" id="val-weight-cost">20%</span>
+                </div>
+                <input type="range" id="weight-cost" class="form-range" min="0" max="60" step="5" value="20">
+              </div>
+
+              <div class="slider-group">
+                <div class="slider-header">
+                  <label for="weight-security">Security & Compliance</label>
+                  <span class="slider-val" id="val-weight-security">30%</span>
+                </div>
+                <input type="range" id="weight-security" class="form-range" min="0" max="60" step="5" value="30">
+              </div>
+
+              <div class="slider-group">
+                <div class="slider-header">
+                  <label for="weight-scalability">Scalability & Multi-Tenancy</label>
+                  <span class="slider-val" id="val-weight-scalability">25%</span>
+                </div>
+                <input type="range" id="weight-scalability" class="form-range" min="0" max="60" step="5" value="25">
+              </div>
+
+              <div class="slider-group">
+                <div class="slider-header">
+                  <label for="weight-integration">Integration & APIs</label>
+                  <span class="slider-val" id="val-weight-integration">15%</span>
+                </div>
+                <input type="range" id="weight-integration" class="form-range" min="0" max="60" step="5" value="15">
+              </div>
+
+              <div class="slider-group">
+                <div class="slider-header">
+                  <label for="weight-features">Features & Maturity</label>
+                  <span class="slider-val" id="val-weight-features">10%</span>
+                </div>
+                <input type="range" id="weight-features" class="form-range" min="0" max="60" step="5" value="10">
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 5: TOE Review & Submit (EA-5) -->
+          <div class="wizard-pane" id="wizard-pane-5">
+            <h3 class="pane-title">Step 5: TOE Readiness Review & Validation</h3>
+            <p class="pane-desc">Computed Technology, Organisation, and Environment readiness index based on your profile.</p>
+
+            <div class="toe-summary-card">
+              <div class="toe-main-score">
+                <div class="score-circle">
+                  <span class="toe-score-large" id="review-overall-toe">77.5</span>
+                  <span class="toe-score-sub">Overall Readiness</span>
+                </div>
+                <div class="toe-narrative">
+                  <h4 class="toe-level-title" id="review-toe-level">High Readiness Profile</h4>
+                  <p id="review-toe-explanation">
+                    Your organisation demonstrates adequate financial budget per employee, robust executive impetus for cloud migration, and manageable legacy technical debt.
+                  </p>
+                </div>
+              </div>
+
+              <div class="toe-breakdown-grid">
+                <div class="toe-dimension-card">
+                  <span class="dim-badge">Technology (40% wt)</span>
+                  <div class="dim-score" id="review-toe-tech">67.0<small>/100</small></div>
+                  <p class="dim-desc">Evaluates legacy technical debt and hosting transition feasibility.</p>
+                </div>
+                <div class="toe-dimension-card">
+                  <span class="dim-badge">Organisation (35% wt)</span>
+                  <div class="dim-score" id="review-toe-org">85.0<small>/100</small></div>
+                  <p class="dim-desc">Reflects IT budget capacity ($1,500/emp) and transformation governance.</p>
+                </div>
+                <div class="toe-dimension-card">
+                  <span class="dim-badge">Environment (25% wt)</span>
+                  <div class="dim-score" id="review-toe-env">87.0<small>/100</small></div>
+                  <p class="dim-desc">Reflects 18% annual growth momentum and strict regulatory drivers.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="review-meta-box">
+              <div class="meta-item">
+                <span>Enterprise:</span>
+                <strong id="review-comp-name">Apex Global Enterprises</strong>
+              </div>
+              <div class="meta-item">
+                <span>Legacy Systems:</span>
+                <strong id="review-apps-count">4 Applications</strong>
+              </div>
+              <div class="meta-item">
+                <span>Data Sensitivity:</span>
+                <strong id="review-sensitivity">High</strong>
+              </div>
+              <div class="meta-item">
+                <span>Criteria Setup:</span>
+                <strong>Cost 20%, Sec 30%, Scale 25%, Int 15%, Feat 10%</strong>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <!-- Wizard Navigation Footer -->
+        <div class="wizard-footer">
+          <button type="button" class="btn btn-outline" id="btn-wizard-prev" disabled>Back</button>
+          <div class="wizard-footer-right">
+            <button type="button" class="btn btn-primary" id="btn-wizard-next">Next Step →</button>
+            <button type="button" class="btn btn-success" id="btn-wizard-submit" style="display: none;">Submit & Evaluate</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: SAAS CATALOG ==================== -->
+    <section class="tab-content" id="view-catalog">
+      <div class="page-header">
+        <div>
+          <h2 class="page-title">Enterprise SaaS Product Catalog</h2>
+          <p class="page-subtitle">Ten curated enterprise cloud platforms seeded with standard architectural, security, and integration ratings.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary" id="btn-admin-add-product">
+            <span class="btn-icon">➕</span> Add SaaS Product
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter and Search Bar -->
+      <div class="catalog-filter-bar">
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="catalog-search" class="form-control" placeholder="Search by product name, vendor, or capabilities...">
+        </div>
+        <div class="category-pill-group" id="catalog-category-filters">
+          <button class="filter-pill active" data-category="All">All (10)</button>
+          <button class="filter-pill" data-category="ERP">ERP</button>
+          <button class="filter-pill" data-category="CRM">CRM</button>
+          <button class="filter-pill" data-category="HCM">HCM</button>
+          <button class="filter-pill" data-category="ITSM">ITSM</button>
+          <button class="filter-pill" data-category="Productivity">Productivity</button>
+          <button class="filter-pill" data-category="Analytics">Analytics</button>
+          <button class="filter-pill" data-category="Identity">Identity</button>
+        </div>
+      </div>
+
+      <!-- Catalog Products Grid -->
+      <div class="catalog-grid" id="catalog-products-container">
+        <!-- Injected via JavaScript -->
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: RECOMMENDATION & COMPARISON ==================== -->
+    <section class="tab-content" id="view-recommendation">
+      <div class="page-header">
+        <div>
+          <h2 class="page-title">SaaS Recommendation Engine & Comparison</h2>
+          <p class="page-subtitle">Multi-criteria weighted scoring algorithm with explainable justification and side-by-side product comparison.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary" id="btn-run-evaluation">
+            <span class="btn-icon">⚡</span> Run Weighted Evaluation
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Weight Simulation Toolbar -->
+      <div class="card simulation-card">
+        <div class="simulation-header">
+          <div class="sim-title">
+            <span class="sim-icon">🎛️</span>
+            <div>
+              <strong>Live Weight Sensitivity Simulation</strong>
+              <span class="sim-sub">Tweak weights in real time to test how priority shifts alter the top recommendation.</span>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-outline" id="btn-recalc-sim">Recalculate Rankings</button>
+        </div>
+
+        <div class="sim-sliders-row">
+          <div class="sim-slider-item">
+            <label>Cost: <strong id="sim-val-cost">20%</strong></label>
+            <input type="range" id="sim-cost" min="0" max="60" step="5" value="20">
+          </div>
+          <div class="sim-slider-item">
+            <label>Security: <strong id="sim-val-security">30%</strong></label>
+            <input type="range" id="sim-sec" min="0" max="60" step="5" value="30">
+          </div>
+          <div class="sim-slider-item">
+            <label>Scalability: <strong id="sim-val-scalability">25%</strong></label>
+            <input type="range" id="sim-scale" min="0" max="60" step="5" value="25">
+          </div>
+          <div class="sim-slider-item">
+            <label>Integration: <strong id="sim-val-integration">15%</strong></label>
+            <input type="range" id="sim-int" min="0" max="60" step="5" value="15">
+          </div>
+          <div class="sim-slider-item">
+            <label>Features: <strong id="sim-val-features">10%</strong></label>
+            <input type="range" id="sim-feat" min="0" max="60" step="5" value="10">
+          </div>
+        </div>
+      </div>
+
+      <!-- Side-by-Side Product Comparison Matrix (RE-5) -->
+      <div class="card compare-card">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title">Side-by-Side Product Comparison Matrix</h3>
+            <span class="card-subtitle">Select candidate products to compare architecture, security, cost, and complexity side-by-side.</span>
+          </div>
+          <div class="compare-selectors" id="compare-selectors-group">
+            <select id="compare-sel-1" class="form-control form-control-sm"></select>
+            <span class="vs-text">vs</span>
+            <select id="compare-sel-2" class="form-control form-control-sm"></select>
+            <span class="vs-text">vs</span>
+            <select id="compare-sel-3" class="form-control form-control-sm"></select>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="compare-table-wrapper" id="compare-matrix-container">
+            <!-- Dynamically generated comparison table -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Ranked Recommendations Leaderboard (RE-1, RE-3) -->
+      <div class="recommendations-container" id="recommendations-list">
+        <!-- Rendered via JavaScript -->
+      </div>
+    </section>
+
+    <!-- ==================== TAB 5: RISK ASSESSMENT ==================== -->
+    <section class="tab-content" id="view-risks">
+      <div class="page-header">
+        <div>
+          <h2 class="page-title">Enterprise Risk Assessment & Mitigations</h2>
+          <p class="page-subtitle">Rule-based risk analysis adjusting probabilities based on legacy systems count, data sensitivity, and workforce scale.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary" id="btn-reassess-risks">
+            <span class="btn-icon">🛡️</span> Reassess Enterprise Risks
+          </button>
+        </div>
+      </div>
+
+      <!-- Top Summary Cards -->
+      <div class="risk-overview-row">
+        <!-- 5x5 Heatmap Matrix Card -->
+        <div class="card heatmap-card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">5×5 Risk Exposure Heatmap Matrix</h3>
+              <span class="card-subtitle">Probability (1-5) vs Impact (1-5)</span>
+            </div>
+            <div class="heatmap-legend">
+              <span class="legend-dot green">Low (1-5)</span>
+              <span class="legend-dot yellow">Med (6-11)</span>
+              <span class="legend-dot orange">High (12-15)</span>
+              <span class="legend-dot red">Critical (16-25)</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="heatmap-grid" id="risk-heatmap-grid">
+              <!-- Rendered 5x5 Matrix via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Budget Fit & Exposure Summary Card (RA-4, RA-5) -->
+        <div class="card budget-fit-card">
+          <div class="card-header">
+            <h3 class="card-title">Cost Analysis & Budget Fit</h3>
+            <span class="kpi-pill success" id="risk-budget-fit-badge">Adequate Fit</span>
+          </div>
+          <div class="card-body">
+            <div class="budget-stat-box">
+              <span class="budget-label">Allocated Annual IT Budget</span>
+              <span class="budget-val" id="risk-it-budget-val">$1,500,000</span>
+            </div>
+            <p class="budget-notes" id="risk-budget-notes">
+              Annual IT budget provides sufficient room for transition capital expenditures and parallel dual-run migration testing.
+            </p>
+            <div class="risk-summary-pills">
+              <div class="sum-pill crit">
+                <span class="count" id="risk-sum-crit">2</span>
+                <span class="lbl">Critical Risks</span>
+              </div>
+              <div class="sum-pill high">
+                <span class="count" id="risk-sum-high">2</span>
+                <span class="lbl">High Risks</span>
+              </div>
+              <div class="sum-pill med">
+                <span class="count" id="risk-sum-med">1</span>
+                <span class="lbl">Medium Risks</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detailed Assessed Risks Table & Mitigation Cards (RA-1, RA-2, RA-3) -->
+      <div class="assessed-risks-list" id="assessed-risks-container">
+        <!-- Injected via JS -->
+      </div>
+    </section>
+
+    <!-- ==================== TAB 6: MIGRATION PLANNER ==================== -->
+    <section class="tab-content" id="view-planner">
+      <div class="page-header">
+        <div>
+          <h2 class="page-title">8-Phase Transformation Migration Roadmap</h2>
+          <p class="page-subtitle">Phased execution plan adapted to target SaaS product complexity, legacy system volume, and identified risks.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline-primary" id="btn-regenerate-plan">
+            <span class="btn-icon">⚡</span> Regenerate Plan
+          </button>
+        </div>
+      </div>
+
+      <!-- Roadmap Header Progress Card -->
+      <div class="card roadmap-hero-card">
+        <div class="roadmap-hero-top">
+          <div>
+            <h3 class="roadmap-plan-title" id="plan-hero-title">SaaS Transformation Roadmap: SAP S/4HANA Cloud</h3>
+            <span class="roadmap-meta">
+              Target Duration: <strong id="plan-hero-duration">12 Months</strong> | 
+              Start: <strong id="plan-hero-start">2026-10-15</strong> | 
+              Target Go-Live: <strong id="plan-hero-end">2027-10-15</strong>
+            </span>
+          </div>
+          <div class="overall-progress-box">
+            <span class="overall-progress-pct" id="plan-overall-pct">32.5%</span>
+            <span class="overall-progress-lbl">Overall Progress</span>
+          </div>
+        </div>
+        <div class="progress-bar-bg large">
+          <div class="progress-bar-fill fill-green" id="plan-overall-bar" style="width: 32.5%;"></div>
+        </div>
+      </div>
+
+      <!-- 8-Phase Interactive Timeline & Cards (MP-1 to MP-5) -->
+      <div class="phases-timeline" id="phases-timeline-container">
+        <!-- Populated via JavaScript -->
+      </div>
+    </section>
+
+    <!-- ==================== TAB 7: AI TRANSFORMATION ADVISOR ==================== -->
+    <section class="tab-content" id="view-assistant">
+      <div class="page-header">
+        <div>
+          <h2 class="page-title">AI Transformation Advisor</h2>
+          <p class="page-subtitle">Conversational enterprise decision support powered by your active assessment context, scores, risks, and roadmap.</p>
+        </div>
+        <div class="page-actions">
+          <label class="toggle-switch">
+            <input type="checkbox" id="ai-active-toggle" checked>
+            <span class="toggle-slider"></span>
+            <span class="toggle-label">Assistant Enabled</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card chat-card">
+        <!-- Suggested Prompt Chips -->
+        <div class="prompt-chips-bar" id="prompt-chips">
+          <button class="prompt-chip" data-prompt="Why is the top product ranked #1?">🏆 Why is the top product ranked #1?</button>
+          <button class="prompt-chip" data-prompt="What are our most critical migration risks?">🛡️ What are our top migration risks?</button>
+          <button class="prompt-chip" data-prompt="How should we plan data migration for AS/400?">💾 How should we phase data migration?</button>
+          <button class="prompt-chip" data-prompt="What does our TOE readiness score indicate?">📊 Explain our TOE readiness score</button>
+          <button class="prompt-chip" data-prompt="Generate executive summary pitch for the CFO">💼 Executive pitch for the CFO</button>
+        </div>
+
+        <!-- Chat Conversation Messages -->
+        <div class="chat-messages" id="chat-messages-container">
+          <div class="chat-msg assistant">
+            <div class="msg-avatar">🤖</div>
+            <div class="msg-content">
+              <p><strong>Welcome to the SAP Enterprise SaaS Transformation Advisor.</strong></p>
+              <p>I have ingested your current organizational profile (<strong>Apex Global Enterprises</strong>, 1,000 employees, on-premise infrastructure with high data sensitivity) along with your multi-criteria evaluation results and 8-phase roadmap.</p>
+              <p>How can I assist your transformation committee today?</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Input Bar -->
+        <div class="chat-input-bar">
+          <input type="text" id="chat-input" class="form-control" placeholder="Ask questions about evaluation rankings, risk mitigations, migration timelines, or business case...">
+          <button class="btn btn-primary" id="btn-chat-send">Send</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal: Product Details Inspection (SC-2, SC-4) -->
+  <div class="modal-overlay" id="modal-product-details">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title" id="modal-prod-name">Product Details</h3>
+          <span class="modal-subtitle" id="modal-prod-vendor">Vendor & Category</span>
+        </div>
+        <button class="btn-close" id="btn-close-prod-modal">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-prod-body">
+        <!-- Dynamic content -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="btn-modal-close-action">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add / Edit Product (Admin Only - SC-3) -->
+  <div class="modal-overlay" id="modal-admin-product">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" id="admin-prod-title">Add SaaS Product</h3>
+        <button class="btn-close" id="btn-close-admin-modal">&times;</button>
+      </div>
+      <form id="admin-product-form">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="admin-inp-name">Product Name *</label>
+              <input type="text" id="admin-inp-name" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="admin-inp-vendor">Vendor *</label>
+              <input type="text" id="admin-inp-vendor" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="admin-inp-category">Category *</label>
+              <select id="admin-inp-category" class="form-control">
+                <option value="ERP">ERP</option>
+                <option value="CRM">CRM</option>
+                <option value="HCM">HCM</option>
+                <option value="ITSM">ITSM</option>
+                <option value="Productivity">Productivity</option>
+                <option value="Analytics">Analytics</option>
+                <option value="Identity">Identity</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="admin-inp-pricing">Pricing Model</label>
+              <input type="text" id="admin-inp-pricing" class="form-control" value="Per User/Month">
+            </div>
+            <div class="form-group">
+              <label for="admin-inp-cost">Cost Rating (0-100)</label>
+              <input type="number" id="admin-inp-cost" class="form-control" min="10" max="100" value="75">
+            </div>
+            <div class="form-group">
+              <label for="admin-inp-security">Security Rating (0-100)</label>
+              <input type="number" id="admin-inp-security" class="form-control" min="10" max="100" value="90">
+            </div>
+            <div class="form-group">
+              <label for="admin-inp-scalability">Scalability Rating (0-100)</label>
+              <input type="number" id="admin-inp-scalability" class="form-control" min="10" max="100" value="92">
+            </div>
+            <div class="form-group">
+              <label for="admin-inp-integration">Integration Rating (0-100)</label>
+              <input type="number" id="admin-inp-integration" class="form-control" min="10" max="100" value="88">
+            </div>
+            <div class="form-group">
+              <label for="admin-inp-features">Features Rating (0-100)</label>
+              <input type="number" id="admin-inp-features" class="form-control" min="10" max="100" value="90">
+            </div>
+            <div class="form-group">
+              <label for="admin-inp-complexity">Migration Complexity</label>
+              <select id="admin-inp-complexity" class="form-control">
+                <option value="Low">Low</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+            <div class="form-group full-width">
+              <label for="admin-inp-desc">Description</label>
+              <textarea id="admin-inp-desc" class="form-control" rows="2"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="btn-admin-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save to Catalog</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Export Assessment Report (TD-5) -->
+  <div class="modal-overlay" id="modal-report-export">
+    <div class="modal-dialog modal-dialog-large">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Executive SaaS Transformation Report</h3>
+          <span class="modal-subtitle">Comprehensive Assessment, Recommendations & Migration Phasing</span>
+        </div>
+        <button class="btn-close" id="btn-close-report-modal">&times;</button>
+      </div>
+      <div class="modal-body printable-report" id="report-content-body">
+        <!-- Rendered report content ready for print -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="btn-report-close">Close</button>
+        <button class="btn btn-primary" id="btn-report-print">
+          <span class="btn-icon">🖨️</span> Print / Save as PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
