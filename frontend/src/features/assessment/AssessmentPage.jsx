@@ -26,6 +26,7 @@ import { useToast } from '../../components/Toast';
 export function AssessmentPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAddLegacyModalOpen, setIsAddLegacyModalOpen] = useState(false);
   const { showToast } = useToast();
@@ -82,6 +83,7 @@ export function AssessmentPage() {
           }));
         }
       } catch (err) {
+        setError(err.message || 'Error loading assessment');
         showToast(`Error loading assessment: ${err.message}`, 'danger');
       } finally {
         setLoading(false);
@@ -252,6 +254,18 @@ export function AssessmentPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-md mx-auto my-16 p-6 rounded-2xl bg-red-950/40 border border-red-500/40 text-center space-y-4">
+        <h3 className="text-base font-bold text-white">Error Loading Assessment</h3>
+        <p className="text-xs text-red-300">{error}</p>
+        <Button variant="primary" size="sm" onClick={() => window.location.reload()}>
+          Retry
+        </Button>
       </div>
     );
   }

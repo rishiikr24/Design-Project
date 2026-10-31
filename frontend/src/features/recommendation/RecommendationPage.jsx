@@ -14,6 +14,8 @@ export function RecommendationPage() {
   const [allProducts, setAllProducts] = useState([]);
   const [weights, setWeights] = useState({ ...DEFAULT_WEIGHTS });
   const [comparing, setComparing] = useState(['sap-cloud-erp', 'salesforce-crm', 'ms-dynamics-365']);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { showToast } = useToast();
 
   const runEvaluation = async (customWeights = weights) => {
@@ -24,15 +26,24 @@ export function RecommendationPage() {
       });
       setResults(data.results || []);
     } catch (err) {
+      setError(err.message || 'Evaluation error');
       showToast(`Evaluation error: ${err.message}`, 'danger');
     }
   };
 
   useEffect(() => {
     async function loadData() {
-      await runEvaluation();
-      const prods = await catalogService.getProducts();
-      setAllProducts(prods);
+      setLoading(true);
+      setError(null);
+      try {
+        await runEvaluation();
+        const prods = await catalogService.getProducts();
+        setAllProducts(prods);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     }
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -81,6 +92,26 @@ export function RecommendationPage() {
     { label: 'Migration Complexity', render: p => <Badge variant={p.migrationComplexity === 'High' ? 'danger' : p.migrationComplexity === 'Medium' ? 'warning' : 'primary'}>{p.migrationComplexity} Complexity</Badge> },
     { label: 'Deployment Topology', key: 'deploymentType' }
   ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-md mx-auto my-16 p-6 rounded-2xl bg-red-950/40 border border-red-500/40 text-center space-y-4">
+        <h3 className="text-base font-bold text-white">Evaluation Error</h3>
+        <p className="text-xs text-red-300">{error}</p>
+        <Button variant="primary" size="sm" onClick={() => runEvaluation()}>
+          Retry Evaluation
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">

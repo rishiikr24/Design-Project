@@ -55,8 +55,8 @@ export function Topbar() {
     <header className="h-16 bg-slate-900/90 border-b border-slate-800 px-5 flex items-center justify-between shrink-0 backdrop-blur-md">
       {/* Brand logo & title */}
       <div className="flex items-center gap-3.5">
-        <div className="w-10 h-7 bg-blue-600 rounded flex items-center justify-center font-black text-white text-xs tracking-wider shadow-md shadow-blue-900/50">
-          SAP
+        <div className="w-10 h-7 bg-blue-600 rounded flex items-center justify-center font-black text-white text-xs tracking-wider shadow-md shadow-blue-900/50" title="Enterprise SaaS Transformation Platform">
+          SaaS
         </div>
         <div>
           <h1 className="text-sm font-bold text-white tracking-tight leading-none">

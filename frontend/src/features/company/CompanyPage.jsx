@@ -12,6 +12,7 @@ import { useToast } from '../../components/Toast';
 export function CompanyPage() {
   const [data, setData] = useState({ companies: [], users: [] });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [editingCompany, setEditingCompany] = useState(null);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
@@ -26,12 +27,14 @@ export function CompanyPage() {
 
   const loadData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await companyService.getCompanies();
       setData(res);
       const user = await authService.getCurrentUser();
       setCurrentUser(user);
     } catch (err) {
+      setError(err.message || 'Error loading tenant profiles');
       showToast(`Error loading tenant profiles: ${err.message}`, 'danger');
     } finally {
       setLoading(false);
@@ -96,6 +99,30 @@ export function CompanyPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-md mx-auto my-16 p-6 rounded-2xl bg-red-950/40 border border-red-500/40 text-center space-y-4">
+        <h3 className="text-base font-bold text-white">Error Loading Tenant Data</h3>
+        <p className="text-xs text-red-300">{error}</p>
+        <Button variant="primary" size="sm" onClick={loadData}>
+          Retry Connection
+        </Button>
+      </div>
+    );
+  }
+
+  if (!data || !data.companies || data.companies.length === 0) {
+    return (
+      <div className="max-w-md mx-auto my-16 p-6 rounded-2xl bg-slate-900 border border-slate-800 text-center space-y-4">
+        <h3 className="text-base font-bold text-white">No Organizations Registered</h3>
+        <p className="text-xs text-slate-400">Initialize default tenant profiles to begin.</p>
+        <Button variant="primary" size="sm" onClick={loadData}>
+          Load Tenants
+        </Button>
       </div>
     );
   }

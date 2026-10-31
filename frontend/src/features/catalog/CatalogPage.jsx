@@ -17,6 +17,8 @@ export function CatalogPage() {
   const [activeProduct, setActiveProduct] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { showToast } = useToast();
 
   const [newProd, setNewProd] = useState({
@@ -37,6 +39,8 @@ export function CatalogPage() {
   });
 
   const loadProducts = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const data = await catalogService.getProducts();
       setProducts(data);
@@ -44,7 +48,10 @@ export function CatalogPage() {
       const user = await authService.getCurrentUser();
       setCurrentUser(user);
     } catch (err) {
+      setError(err.message || 'Error loading SaaS products catalog');
       showToast(`Error loading products: ${err.message}`, 'danger');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -109,6 +116,26 @@ export function CatalogPage() {
   };
 
   const categories = ['All', 'ERP', 'CRM', 'HCM', 'ITSM', 'Productivity', 'Analytics', 'Identity'];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-md mx-auto my-16 p-6 rounded-2xl bg-red-950/40 border border-red-500/40 text-center space-y-4">
+        <h3 className="text-base font-bold text-white">Error Loading Catalog</h3>
+        <p className="text-xs text-red-300">{error}</p>
+        <Button variant="primary" size="sm" onClick={loadProducts}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">

@@ -10,14 +10,17 @@ import { useToast } from '../../components/Toast';
 export function RiskPage() {
   const [riskData, setRiskData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { showToast } = useToast();
 
   const loadRisks = async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await riskService.assessRisks('assessment-ref-case');
       setRiskData(data);
     } catch (err) {
+      setError(err.message || 'Risk assessment calculation error');
       showToast(`Risk assessment error: ${err.message}`, 'danger');
     } finally {
       setLoading(false);
@@ -29,10 +32,34 @@ export function RiskPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (loading || !riskData) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-md mx-auto my-16 p-6 rounded-2xl bg-red-950/40 border border-red-500/40 text-center space-y-4">
+        <h3 className="text-base font-bold text-white">Risk Evaluation Failed</h3>
+        <p className="text-xs text-red-300">{error}</p>
+        <Button variant="primary" size="sm" onClick={loadRisks}>
+          Retry Risk Analysis
+        </Button>
+      </div>
+    );
+  }
+
+  if (!riskData || !riskData.risks || riskData.risks.length === 0) {
+    return (
+      <div className="max-w-md mx-auto my-16 p-6 rounded-2xl bg-slate-900 border border-slate-800 text-center space-y-4">
+        <h3 className="text-base font-bold text-white">No Risk Data Found</h3>
+        <p className="text-xs text-slate-400">Complete an assessment to analyze transformation risks.</p>
+        <Button variant="primary" size="sm" onClick={loadRisks}>
+          Generate Risk Analysis
+        </Button>
       </div>
     );
   }
