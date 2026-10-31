@@ -63,3 +63,4 @@ describe('Module 1: Authentication & RBAC Service (Mocked)', () => {
     })).rejects.toThrow('already exists');
   });
 });
+

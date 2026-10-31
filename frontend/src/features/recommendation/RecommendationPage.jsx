@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Sliders, RefreshCw } from 'lucide-react';
+import { Sliders, RefreshCw, RotateCcw } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Badge } from '../../components/Badge';
 import { recommendationService } from '../../services/recommendationService';
 import { catalogService } from '../../services/catalogService';
-import { DEFAULT_WEIGHTS } from '../../lib/scoring';
+import { DEFAULT_WEIGHTS, validateWeights } from '../../lib/scoring';
 import { formatNumber } from '../../lib/utils';
 import { useToast } from '../../components/Toast';
 
@@ -39,16 +39,28 @@ export function RecommendationPage() {
   }, []);
 
   const handleSimSliderChange = (criterion, value) => {
-    setWeights(prev => ({
-      ...prev,
+    const updated = {
+      ...weights,
       [criterion]: Number(value)
-    }));
+    };
+    setWeights(updated);
+    if (validateWeights(updated)) {
+      runEvaluation(updated);
+    }
+  };
+
+  const weightsSum = Object.values(weights).reduce((a, b) => a + Number(b), 0);
+  const isWeightsValid = validateWeights(weights);
+
+  const handleResetWeights = () => {
+    setWeights({ ...DEFAULT_WEIGHTS });
+    runEvaluation(DEFAULT_WEIGHTS);
+    showToast('Simulation weights reset to defaults (20/30/25/15/10)', 'info');
   };
 
   const handleRecalculateSim = () => {
-    const sum = Object.values(weights).reduce((a, b) => a + Number(b), 0);
-    if (sum !== 100) {
-      showToast(`Simulation weights must total 100% (Current: ${sum}%)`, 'warning');
+    if (!isWeightsValid) {
+      showToast(`Simulation weights must total 100% (Current: ${weightsSum}%)`, 'warning');
       return;
     }
     runEvaluation(weights);
@@ -66,7 +78,7 @@ export function RecommendationPage() {
     { label: 'Scalability Tier', render: p => <span><strong>{p.scalabilityScore}/100</strong> ({p.scalabilityRating})</span> },
     { label: 'Integration Capability', render: p => <span><strong>{p.integrationScore}/100</strong><br/><span className="text-slate-400 text-[10px]">{p.integrationCapability}</span></span> },
     { label: 'Features Maturity', render: p => <span><strong>{p.featuresScore}/100</strong></span> },
-    { label: 'Migration Complexity', render: p => <Badge variant={p.migrationComplexity === 'High' ? 'danger' : 'primary'}>{p.migrationComplexity} Complexity</Badge> },
+    { label: 'Migration Complexity', render: p => <Badge variant={p.migrationComplexity === 'High' ? 'danger' : p.migrationComplexity === 'Medium' ? 'warning' : 'primary'}>{p.migrationComplexity} Complexity</Badge> },
     { label: 'Deployment Topology', key: 'deploymentType' }
   ];
 
@@ -75,8 +87,11 @@ export function RecommendationPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-800">
         <div>
-          <h2 className="text-xl font-bold text-white tracking-tight">SaaS Recommendation Engine & Comparison</h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <div className="flex items-center gap-2 mb-1">
+            <h2 className="text-xl font-bold text-white tracking-tight">SaaS Recommendation Engine & Comparison</h2>
+            <Badge variant="cyan">Module 4</Badge>
+          </div>
+          <p className="text-xs text-slate-400">
             Multi-criteria weighted scoring algorithm with explainable justification and side-by-side product comparison.
           </p>
         </div>
@@ -87,32 +102,47 @@ export function RecommendationPage() {
       </div>
 
       {/* Live Weight Sensitivity Simulation */}
-      <Card className="border-blue-500/20 bg-slate-900/90">
-        <CardHeader className="pb-3">
+      <Card className="border-blue-500/20 bg-slate-900/90 shadow-lg">
+        <CardHeader className="pb-3 flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Sliders className="w-4 h-4 text-cyan-400" />
             <div>
               <CardTitle className="text-sm">Live Weight Sensitivity Simulation</CardTitle>
-              <CardDescription>Tweak criteria weights in real time to test how priority shifts alter recommendations.</CardDescription>
+              <CardDescription>Tweak criteria weights in real time to test how enterprise priority shifts alter product rankings.</CardDescription>
             </div>
           </div>
-          <Button variant="outlineCyan" size="sm" onClick={handleRecalculateSim}>
-            Recalculate
-          </Button>
+          <div className="flex items-center gap-2">
+            <span
+              className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                isWeightsValid
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                  : 'bg-red-500/20 text-red-400 border border-red-500/40'
+              }`}
+            >
+              Sum: {weightsSum}% {isWeightsValid ? '✓ Valid' : '✕'}
+            </span>
+            <Button variant="outline" size="sm" onClick={handleResetWeights} title="Reset to PRD standard default">
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Reset</span>
+            </Button>
+            <Button variant="outlineCyan" size="sm" onClick={handleRecalculateSim}>
+              Recalculate
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
             {[
-              { key: 'cost', label: 'Cost' },
-              { key: 'security', label: 'Security' },
-              { key: 'scalability', label: 'Scalability' },
-              { key: 'integration', label: 'Integration' },
-              { key: 'features', label: 'Features' }
+              { key: 'cost', label: 'Cost Fit', color: 'text-amber-400' },
+              { key: 'security', label: 'Security', color: 'text-blue-400' },
+              { key: 'scalability', label: 'Scalability', color: 'text-cyan-400' },
+              { key: 'integration', label: 'Integration', color: 'text-emerald-400' },
+              { key: 'features', label: 'Features', color: 'text-purple-400' }
             ].map(crit => (
-              <div key={crit.key} className="space-y-1">
+              <div key={crit.key} className="space-y-1 p-2.5 rounded-lg bg-slate-800/40 border border-slate-700/50">
                 <div className="flex justify-between text-xs">
-                  <span className="text-slate-400">{crit.label}:</span>
-                  <span className="text-cyan-400 font-mono font-bold">{weights[crit.key]}%</span>
+                  <span className="text-slate-300 font-medium">{crit.label}:</span>
+                  <span className={`font-mono font-bold ${crit.color}`}>{weights[crit.key]}%</span>
                 </div>
                 <input
                   type="range"
@@ -121,7 +151,7 @@ export function RecommendationPage() {
                   step="5"
                   value={weights[crit.key]}
                   onChange={(e) => handleSimSliderChange(crit.key, e.target.value)}
-                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                  className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
                 />
               </div>
             ))}
@@ -131,10 +161,10 @@ export function RecommendationPage() {
 
       {/* Side-by-Side Comparison Matrix */}
       <Card>
-        <CardHeader className="flex-col sm:flex-row items-start sm:items-center gap-3">
+        <CardHeader className="flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <CardTitle>Side-by-Side Product Comparison Matrix</CardTitle>
-            <CardDescription>Select candidate products to compare architecture, security, cost, and complexity.</CardDescription>
+            <CardDescription>Select any 3 catalog candidate platforms to benchmark architecture, security, cost, and complexity.</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             {[0, 1, 2].map(idx => (
