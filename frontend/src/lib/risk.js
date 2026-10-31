@@ -1,3 +1,13 @@
+/**
+ * Pure Rule-based Risk Assessment Engine
+ * Maps enterprise assessment parameters and seeded templates to calibrated probabilities and impacts.
+ */
+
+/**
+ * Determine severity classification from calculated risk score (P x I)
+ * @param {number} score (1 to 25)
+ * @returns {string} Critical | High | Medium | Low
+ */
 export function getSeverity(score) {
   if (score >= 16) return 'Critical';
   if (score >= 12) return 'High';
@@ -5,112 +15,135 @@ export function getSeverity(score) {
   return 'Low';
 }
 
+/**
+ * Assess and adjust risks based on organizational inputs
+ * @param {Array} templates Seeded risk templates
+ * @param {Object} assessment Assessment context (dataSensitivity, infrastructure, legacyAppsCount, employees, itBudget)
+ * @returns {Object} Assessed risks list, overall risk level, budgetFit
+ */
 export function assessRisks(templates = [], assessment = {}) {
-  const infra = (assessment.infrastructure || 'On-premise').toLowerCase();
-  const legacyAppsCount = Number(assessment.legacyAppsCount) || 3;
-  const sensitivity = assessment.dataSensitivity || 'Medium';
+  if (!Array.isArray(templates) || templates.length === 0) {
+    return {
+      risks: [],
+      overallRiskLevel: 'Low',
+      summary: { critical: 0, high: 0, medium: 0, low: 0 }
+    };
+  }
 
-  let criticalCount = 0;
-  let highCount = 0;
-  let mediumCount = 0;
-  let lowCount = 0;
+  const legacyCount = Number(assessment.legacyAppsCount) || 
+                      (Array.isArray(assessment.legacyApplications) ? assessment.legacyApplications.length : 0);
+  const dataSensitivity = assessment.dataSensitivity || 'Medium';
+  const infrastructure = assessment.infrastructure || 'On-premise';
+  const employees = Number(assessment.employees) || 500;
+  const painPoints = (assessment.painPoints || '').toLowerCase();
 
-  const evaluatedRisks = templates.map(template => {
-    let prob = Number(template.baseProbability) || 3;
-    let imp = Number(template.baseImpact) || 3;
-    let adjustReasons = [];
+  const assessed = templates.map(tmpl => {
+    let prob = tmpl.baseProbability || 3;
+    let impact = tmpl.baseImpact || 3;
+    const adjustments = [];
+    const tid = tmpl.ID || tmpl.id;
 
-    const tid = template.ID || template.id;
-
-    if (tid === 'risk-data-loss') {
-      if (sensitivity === 'High') {
-        prob = Math.min(5, prob + 1);
-        adjustReasons.push('Elevated probability due to High Data Sensitivity classification.');
-      }
-      if (legacyAppsCount >= 4) {
-        adjustReasons.push(`High volume of legacy databases (${legacyAppsCount}) heightens business disruption impact.`);
-      }
+    // Rule 1: High data sensitivity raises data loss and security risks
+    if (tid === 'risk-data-loss' && dataSensitivity === 'High') {
+      prob = Math.min(5, prob + 1);
+      adjustments.push('Elevated probability due to High Data Sensitivity classification.');
+    }
+    if (tid === 'risk-security-config' && dataSensitivity === 'High') {
+      prob = Math.min(5, prob + 1);
+      adjustments.push('Regulatory compliance exposure increases probability of misconfiguration audit impact.');
     }
 
+    // Rule 2: Legacy system volume and pure On-Premise infrastructure elevates integration and migration failure
     if (tid === 'risk-integration') {
-      if (infra.includes('on-premise')) {
+      if (infrastructure.toLowerCase().includes('on-premise')) {
         prob = Math.min(5, prob + 1);
-        adjustReasons.push('On-premise legacy infrastructure increases integration friction.');
+        adjustments.push('Pure on-premise footprint requires legacy protocol bridging.');
       }
-      if (legacyAppsCount >= 4) {
+      if (legacyCount >= 4) {
         prob = Math.min(5, prob + 1);
-        adjustReasons.push('High count of legacy monoliths elevates integration failure risk.');
+        adjustments.push(`Multiple legacy systems (${legacyCount}) compound interface complexity.`);
       }
     }
 
+    if (tid === 'risk-data-loss' && legacyCount >= 4) {
+      impact = Math.min(5, impact + 1);
+      adjustments.push(`High volume of legacy databases (${legacyCount}) heightens business disruption impact.`);
+    }
+
+    // Rule 3: Employee scale & organizational change fatigue
     if (tid === 'risk-change-mgmt') {
-      const employees = Number(assessment.employees) || 500;
-      if (employees >= 1000) {
+      if (employees >= 800) {
         prob = Math.min(5, prob + 1);
-        adjustReasons.push('Large enterprise headcount (1000+) requires robust change management.');
+        adjustments.push(`Substantial workforce (${employees} employees) increases change resistance risk.`);
+      }
+      if (painPoints.includes('training') || painPoints.includes('resistance') || painPoints.includes('silo')) {
+        impact = Math.min(5, impact + 1);
+        adjustments.push('Prior organizational silos/training hurdles cited in enterprise pain points.');
       }
     }
 
-    if (tid === 'risk-security-config') {
-      if (sensitivity === 'High') {
-        imp = Math.min(5, imp + 1);
-        adjustReasons.push('Data sensitivity amplifies fallout of misconfiguration.');
+    // Rule 4: Vendor Lock-in
+    if (tid === 'risk-vendor-lockin') {
+      if (assessment.targetCategory === 'ERP') {
+        impact = Math.min(5, impact + 1);
+        adjustments.push('Core ERP replacement creates deep structural dependency.');
       }
     }
 
-    const score = prob * imp;
+    const score = prob * impact;
     const severity = getSeverity(score);
-
-    if (severity === 'Critical') criticalCount++;
-    else if (severity === 'High') highCount++;
-    else if (severity === 'Medium') mediumCount++;
-    else lowCount++;
 
     return {
       templateId: tid,
-      riskTitle: template.riskTitle,
-      category: template.category,
+      riskTitle: tmpl.riskTitle,
+      category: tmpl.category,
       probability: prob,
-      impact: imp,
-      score,
-      severity,
-      mitigation: template.defaultMitigation,
-      adjustedReason: adjustReasons.length > 0 ? adjustReasons.join(' ') : 'Baseline risk rating based on standard industry metrics.'
+      impact: impact,
+      score: score,
+      severity: severity,
+      mitigation: tmpl.defaultMitigation,
+      adjustedReason: adjustments.length > 0 ? adjustments.join(' ') : 'Baseline standard enterprise risk profile.'
     };
   });
 
+  // Calculate summary and overall risk
+  const summary = {
+    critical: assessed.filter(r => r.severity === 'Critical').length,
+    high: assessed.filter(r => r.severity === 'High').length,
+    medium: assessed.filter(r => r.severity === 'Medium').length,
+    low: assessed.filter(r => r.severity === 'Low').length
+  };
+
+  const maxScore = Math.max(...assessed.map(r => r.score));
+  const avgScore = assessed.reduce((sum, r) => sum + r.score, 0) / (assessed.length || 1);
+
   let overallRiskLevel = 'Low';
-  if (criticalCount >= 1 || highCount >= 3) {
+  if (summary.critical > 0 || maxScore >= 16 || avgScore >= 12) {
     overallRiskLevel = 'High';
-  } else if (highCount >= 1 || mediumCount >= 2) {
+  } else if (summary.high > 0 || maxScore >= 10 || avgScore >= 8) {
     overallRiskLevel = 'Medium';
   }
 
+  // Cost and budget fit analysis (RA-4)
+  const itBudget = Number(assessment.itBudget) || 1000000;
   let budgetFit = 'Adequate';
-  let budgetNotes = 'Allocated budget supports standard transformation roadmap.';
-  const budget = Number(assessment.itBudget) || 1000000;
-  if (budget >= 1500000) {
+  let budgetNotes = 'Annual IT budget provides sufficient room for transition capital expenditures.';
+  if (itBudget < 500000 && employees > 500) {
+    budgetFit = 'Constrained';
+    budgetNotes = 'IT budget is tight relative to workforce scale; recommend multi-year phased rollout to smooth licensing spikes.';
+  } else if (itBudget >= 1500000) {
     budgetFit = 'Optimal';
     budgetNotes = 'Strong capital capacity enables accelerated parallel testing and premier implementation support.';
-  } else if (budget < 500000) {
-    budgetFit = 'Constrained';
-    budgetNotes = 'Budget constraints require phasing rollout over a longer horizon to control capital outlays.';
   }
 
   return {
-    risks: evaluatedRisks,
+    risks: assessed,
     overallRiskLevel,
-    summary: {
-      critical: criticalCount,
-      high: highCount,
-      medium: mediumCount,
-      low: lowCount
-    },
+    summary,
     budgetAnalysis: {
       budgetFit,
-      itBudget: budget,
+      itBudget,
       notes: budgetNotes
     }
   };
 }
-

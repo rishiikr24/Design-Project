@@ -1,41 +1,61 @@
+/**
+ * Explainability & Recommendation Reasoning Generator
+ * Produces structured, human-readable rationale linking customer requirements to product features.
+ */
+
 export function generateReason(product, scores, weights, assessment = {}) {
-  const weightedEntries = [
-    { name: 'Cost', score: scores.costSubScore, weight: weights.cost },
-    { name: 'Security', score: scores.securitySubScore, weight: weights.security },
-    { name: 'Scalability', score: scores.scalabilitySubScore, weight: weights.scalability },
-    { name: 'Integration', score: scores.integrationSubScore, weight: weights.integration },
-    { name: 'Features', score: scores.featuresSubScore, weight: weights.features }
+  const reasons = [];
+
+  // Identify highest weighted criteria
+  const weightEntries = [
+    { name: 'Security', weight: weights.security, score: scores.securitySubScore },
+    { name: 'Scalability', weight: weights.scalability, score: scores.scalabilitySubScore },
+    { name: 'Cost', weight: weights.cost, score: scores.costSubScore },
+    { name: 'Integration', weight: weights.integration, score: scores.integrationSubScore },
+    { name: 'Features', weight: weights.features, score: scores.featuresSubScore }
   ];
 
-  weightedEntries.sort((a, b) => b.weight - a.weight);
-  const primaryCriterion = weightedEntries[0];
+  weightEntries.sort((a, b) => b.weight - a.weight);
+  const topCriterion = weightEntries[0];
 
-  let rationale = `Strong alignment on top-priority criterion ${primaryCriterion.name} (${primaryCriterion.weight}% weight) with an outstanding rating of ${primaryCriterion.score}/100.`;
+  // Primary justification
+  if (topCriterion.score >= 90) {
+    reasons.push(`Strong alignment on top-priority criterion ${topCriterion.name} (${topCriterion.weight}% weight) with an outstanding rating of ${topCriterion.score}/100.`);
+  } else if (topCriterion.score >= 75) {
+    reasons.push(`Satisfactory performance on key priority ${topCriterion.name} (${topCriterion.weight}% weight) scoring ${topCriterion.score}/100.`);
+  } else {
+    reasons.push(`Moderate fit on priority ${topCriterion.name} (${topCriterion.weight}% weight) scoring ${topCriterion.score}/100.`);
+  }
 
+  // Security alignment
   if (assessment.dataSensitivity === 'High') {
-    if (scores.securitySubScore >= 90) {
-      rationale += ' Robust compliance alignment to mitigate High Data Sensitivity risk.';
+    if (scores.securitySubScore >= 92) {
+      reasons.push(`Matches High Data Sensitivity mandate with enterprise-grade certifications (${product.securityRating || 'SOC2 / ISO 27001'}).`);
     } else {
-      rationale += ' Requires additional security controls to meet High Data Sensitivity standard.';
+      reasons.push(`Requires additional security controls to meet High Data Sensitivity standard.`);
     }
   }
 
-  if (assessment.employees && Number(assessment.employees) >= 1000) {
+  // Scale alignment
+  if (assessment.employees >= 500 || (assessment.growthRate && assessment.growthRate >= 15)) {
     if (scores.scalabilitySubScore >= 90) {
-      rationale += ` Scalability profile accommodates ${assessment.employees}+ users.`;
+      reasons.push(`Proven multi-tenant elasticity accommodates ${assessment.employees || 500}+ users and expected annual expansion.`);
     }
   }
 
-  if (assessment.legacyAppsCount && Number(assessment.legacyAppsCount) >= 3) {
-    if (scores.integrationSubScore >= 85) {
-      rationale += ` Integration maturity supports migration from ${assessment.legacyAppsCount} legacy systems.`;
+  // Integration alignment
+  if (assessment.legacyAppsCount && assessment.legacyAppsCount >= 3) {
+    if (scores.integrationSubScore >= 90) {
+      reasons.push(`Comprehensive API coverage (${product.integrationCapability || 'OData / REST'}) minimizes cutover friction across ${assessment.legacyAppsCount} legacy systems.`);
     }
   }
 
+  // Product specific highlights
   if (product.migrationComplexity === 'High') {
-    rationale += ' High migration complexity warrants phased deployment.';
+    reasons.push(`Note: Involves high migration complexity; phased pilot testing recommended.`);
+  } else if (product.migrationComplexity === 'Low') {
+    reasons.push(`Advantage: Low migration complexity accelerates time-to-value.`);
   }
 
-  return rationale;
+  return reasons.join(' ');
 }
-
