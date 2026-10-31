@@ -10,11 +10,9 @@ export const DEFAULT_WEIGHTS = {
 
 export function validateWeights(weights) {
   if (!weights) return false;
-  const sum = (Number(weights.cost) || 0) +
-              (Number(weights.security) || 0) +
-              (Number(weights.scalability) || 0) +
-              (Number(weights.integration) || 0) +
-              (Number(weights.features) || 0);
+  const values = [weights.cost, weights.security, weights.scalability, weights.integration, weights.features].map(v => Number(v) || 0);
+  if (values.some(v => v < 0 || v > 100)) return false;
+  const sum = values.reduce((a, b) => a + b, 0);
   return Math.abs(sum - 100.0) < 0.01;
 }
 
@@ -48,19 +46,27 @@ export function scoreProduct(product, weights = DEFAULT_WEIGHTS) {
 }
 
 export function evaluateProducts(products = [], weights = DEFAULT_WEIGHTS, assessment = {}) {
-  let eligibleProducts = [...products];
-
-  if (assessment.targetCategory && assessment.targetCategory !== 'All') {
-    eligibleProducts = eligibleProducts.filter(p =>
-      (p.category || '').toLowerCase() === assessment.targetCategory.toLowerCase()
-    );
+  if (!Array.isArray(products) || products.length === 0) {
+    return [];
   }
 
-  const scored = eligibleProducts.map(product => {
-    const scoredItem = scoreProduct(product, weights);
-    const reason = generateReason(product, scoredItem, weights, assessment);
+  const effectiveWeights = validateWeights(weights) ? weights : DEFAULT_WEIGHTS;
+
+  let candidates = products;
+  if (assessment.targetCategory && assessment.targetCategory !== 'All') {
+    const filtered = products.filter(
+      p => p.category && p.category.toLowerCase() === assessment.targetCategory.toLowerCase()
+    );
+    if (filtered.length > 0) {
+      candidates = filtered;
+    }
+  }
+
+  const scored = candidates.map(product => {
+    const result = scoreProduct(product, effectiveWeights);
+    const reason = generateReason(product, result, effectiveWeights, assessment);
     return {
-      ...scoredItem,
+      ...result,
       reason
     };
   });
@@ -72,4 +78,3 @@ export function evaluateProducts(products = [], weights = DEFAULT_WEIGHTS, asses
     rank: index + 1
   }));
 }
-
