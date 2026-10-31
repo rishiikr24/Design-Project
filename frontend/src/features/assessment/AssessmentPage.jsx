@@ -315,13 +315,12 @@ export function AssessmentPage() {
               className="flex items-center gap-2 group focus:outline-none"
             >
               <div
-                className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${
-                  isActive
+                className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${isActive
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-900/40 ring-2 ring-blue-400'
                     : isDone
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-800 text-slate-400 group-hover:text-slate-200'
-                }`}
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-slate-800 text-slate-400 group-hover:text-slate-200'
+                  }`}
               >
                 {isDone ? '✓' : s.num}
               </div>
@@ -563,8 +562,8 @@ export function AssessmentPage() {
                                 app.criticality === 'Critical'
                                   ? 'danger'
                                   : app.criticality === 'High'
-                                  ? 'warning'
-                                  : 'primary'
+                                    ? 'warning'
+                                    : 'primary'
                               }
                             >
                               {app.criticality}
@@ -612,11 +611,10 @@ export function AssessmentPage() {
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-300 font-medium">Sum of Criteria Weights:</span>
                   <span
-                    className={`font-bold px-3 py-1 rounded-full text-xs transition ${
-                      isWeightsValid
+                    className={`font-bold px-3 py-1 rounded-full text-xs transition ${isWeightsValid
                         ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
                         : 'bg-red-500/20 text-red-400 border border-red-500/40'
-                    }`}
+                      }`}
                   >
                     {weightsSum}% {isWeightsValid ? '✓ Valid' : '✕ Must equal 100%'}
                   </span>
