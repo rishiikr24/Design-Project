@@ -1,0 +1,95 @@
+{
+  "assessment": {
+    "ID": "assessment-ref-case",
+    "title": "Apex Global - Core Systems Cloud Modernization",
+    "company_ID": "comp-apex-global",
+    "infrastructure": "On-premise",
+    "growthRate": 18.0,
+    "dataSensitivity": "High",
+    "painPoints": "Monolithic legacy ERP maintenance costs, customer data siloed in legacy CRM, slow reporting cycles, integration fragility.",
+    "targetCategory": "All",
+    "readinessScore": 77.5,
+    "toeTechScore": 65.0,
+    "toeOrgScore": 85.0,
+    "toeEnvScore": 87.0,
+    "status": "Completed",
+    "legacyApplications": [
+      {
+        "ID": "legacy-crm",
+        "assessment_ID": "assessment-ref-case",
+        "name": "Legacy Custom CRM v4.2",
+        "function": "Customer pipeline and service ticketing",
+        "hosting": "On-premise Windows Server 2012",
+        "criticality": "High",
+        "userCount": 350,
+        "yearsInUse": 9
+      },
+      {
+        "ID": "legacy-as400",
+        "assessment_ID": "assessment-ref-case",
+        "name": "On-Premise ERP (AS/400 Core)",
+        "function": "General ledger, supply chain & order management",
+        "hosting": "On-premise AS/400 Server Rack",
+        "criticality": "Critical",
+        "userCount": 800,
+        "yearsInUse": 14
+      },
+      {
+        "ID": "legacy-hr",
+        "assessment_ID": "assessment-ref-case",
+        "name": "Custom HR Access DB",
+        "function": "Employee directory & attendance",
+        "hosting": "Local Network File Share",
+        "criticality": "Medium",
+        "userCount": 150,
+        "yearsInUse": 7
+      },
+      {
+        "ID": "legacy-sql",
+        "assessment_ID": "assessment-ref-case",
+        "name": "SQL Server Reporting Database",
+        "function": "Nightly batch financial reporting",
+        "hosting": "On-premise SQL Server 2014",
+        "criticality": "High",
+        "userCount": 120,
+        "yearsInUse": 8
+      }
+    ],
+    "requirements": [
+      {
+        "ID": "req-1",
+        "assessment_ID": "assessment-ref-case",
+        "category": "Security",
+        "description": "Mandatory SOC2 Type II and FedRAMP compliance for customer records",
+        "priority": "Must Have"
+      },
+      {
+        "ID": "req-2",
+        "assessment_ID": "assessment-ref-case",
+        "category": "Scalability",
+        "description": "Support 1,000+ concurrent enterprise users with 18% annual growth elasticity",
+        "priority": "Must Have"
+      },
+      {
+        "ID": "req-3",
+        "assessment_ID": "assessment-ref-case",
+        "category": "Integration",
+        "description": "Direct REST/OData APIs to link with SAP BTP and corporate data warehouse",
+        "priority": "Must Have"
+      },
+      {
+        "ID": "req-4",
+        "assessment_ID": "assessment-ref-case",
+        "category": "Cost",
+        "description": "Predictable user-tier licensing under $1.5M annual IT budget",
+        "priority": "Nice to Have"
+      }
+    ]
+  },
+  "postGoLive": {
+    "adoptionRate": 88.4,
+    "costEfficiency": 24.6,
+    "licenseUtilization": 92.1
+  }
+}
+

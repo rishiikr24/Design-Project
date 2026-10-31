@@ -1,0 +1,35 @@
+[
+  {
+    "ID": "usr-rishi",
+    "username": "rishi.kumar",
+    "fullName": "Rishi Kumar (Admin)",
+    "email": "rishi.kumar@apexglobal.com",
+    "role": "Admin",
+    "company_ID": "comp-apex-global"
+  },
+  {
+    "ID": "usr-aarushi",
+    "username": "aarushi.joshi",
+    "fullName": "Aarushi Joshi (IT Manager)",
+    "email": "aarushi.joshi@apexglobal.com",
+    "role": "Manager",
+    "company_ID": "comp-apex-global"
+  },
+  {
+    "ID": "usr-pradyumn",
+    "username": "pradyumn.bisen",
+    "fullName": "Pradyumn Bisen (Analyst)",
+    "email": "pradyumn.bisen@apexglobal.com",
+    "role": "Analyst",
+    "company_ID": "comp-apex-global"
+  },
+  {
+    "ID": "usr-akshayadevi",
+    "username": "akshayadevi.k",
+    "fullName": "Akshayadevi K (Executive Viewer)",
+    "email": "akshayadevi.k@apexglobal.com",
+    "role": "Viewer",
+    "company_ID": "comp-apex-global"
+  }
+]
+
