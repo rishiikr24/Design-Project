@@ -1,0 +1,19 @@
+[
+  {
+    "ID": "comp-apex-global",
+    "name": "Apex Global Enterprises",
+    "industry": "Manufacturing & Logistics",
+    "employees": 1000,
+    "itBudget": 1500000.00,
+    "region": "North America"
+  },
+  {
+    "ID": "comp-novasystems",
+    "name": "Nova Systems Corp",
+    "industry": "Financial Technology",
+    "employees": 450,
+    "itBudget": 850000.00,
+    "region": "EMEA"
+  }
+]
+

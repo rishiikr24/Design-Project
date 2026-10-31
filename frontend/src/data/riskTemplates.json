@@ -1,0 +1,48 @@
+[
+  {
+    "ID": "risk-data-loss",
+    "category": "Data Governance",
+    "riskTitle": "Data Loss During Migration",
+    "description": "Unplanned corruption or schema mismatch resulting in critical historical data loss during ETL/cutover",
+    "baseProbability": 3,
+    "baseImpact": 5,
+    "defaultMitigation": "Implement parallel data validation pipelines, automated SHA-256 checksum verification, and dual-run reconciliations before final cutover."
+  },
+  {
+    "ID": "risk-integration",
+    "category": "Integration & Architecture",
+    "riskTitle": "Integration Failure with Legacy Systems",
+    "description": "Breakdowns in legacy on-premise connectors or asynchronous middleware queues causing operational outages",
+    "baseProbability": 3,
+    "baseImpact": 4,
+    "defaultMitigation": "Deploy API gateway mediation layer (SAP Integration Suite / MuleSoft) and conduct end-to-end integration stress tests in sandbox environment."
+  },
+  {
+    "ID": "risk-change-mgmt",
+    "category": "Organizational Change",
+    "riskTitle": "Employee Resistance & Change Fatigue",
+    "description": "Internal user friction and low initial adoption caused by unfamiliar interfaces and changed operational procedures",
+    "baseProbability": 4,
+    "baseImpact": 3,
+    "defaultMitigation": "Form department change champions, rollout phased role-based interactive training, and track weekly user engagement KPIs."
+  },
+  {
+    "ID": "risk-security-config",
+    "category": "Cybersecurity & Compliance",
+    "riskTitle": "Security Configuration & Compliance Drift",
+    "description": "Accidental misconfiguration of SaaS tenant access permissions, public bucket exposures, or regulatory non-compliance",
+    "baseProbability": 2,
+    "baseImpact": 5,
+    "defaultMitigation": "Enforce automated Zero Trust policies, federated Single Sign-On (SSO/MFA), and perform third-party SOC2 compliance audits prior to go-live."
+  },
+  {
+    "ID": "risk-vendor-lockin",
+    "category": "Commercial & Vendor",
+    "riskTitle": "Vendor Lock-in and Unforeseen Cost Escalation",
+    "description": "Proprietary data models and unexpected licensing cost increases making future migration or expansion costly",
+    "baseProbability": 3,
+    "baseImpact": 4,
+    "defaultMitigation": "Negotiate multi-year price locks, maintain open API data extraction pipelines, and demand standard formats (JSON/Parquet) for database exports."
+  }
+]
+
