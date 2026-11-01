@@ -1,0 +1,5 @@
+ID,username,fullName,email,role,company_ID
+usr-rishi,rishi.kumar,Rishi Kumar (Admin),rishi.kumar@apexglobal.com,Admin,comp-apex-global
+usr-aarushi,aarushi.joshi,Aarushi Joshi (IT Manager),aarushi.joshi@apexglobal.com,Manager,comp-apex-global
+usr-pradyumn,pradyumn.bisen,Pradyumn Bisen (Analyst),pradyumn.bisen@apexglobal.com,Analyst,comp-apex-global
+usr-akshayadevi,akshayadevi.k,Akshayadevi K (Executive Viewer),akshayadevi.k@apexglobal.com,Viewer,comp-apex-global

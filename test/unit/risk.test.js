@@ -1,6 +1,6 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert');
-const { assessRisks, getSeverity } = require('../../srv/lib/risk');
+const { assessRisks, getSeverity } = require('../../legacy-sap/srv/lib/risk');
 
 describe('Rule-Based Risk Assessment Engine', () => {
   const mockTemplates = [

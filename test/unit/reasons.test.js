@@ -1,7 +1,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert');
-const { generateReason } = require('../../srv/lib/reasons');
-const { DEFAULT_WEIGHTS } = require('../../srv/lib/scoring');
+const { generateReason } = require('../../legacy-sap/srv/lib/reasons');
+const { DEFAULT_WEIGHTS } = require('../../legacy-sap/srv/lib/scoring');
 
 describe('Explainability Reason Generator', () => {
   it('generates rich rationale based on highest weighted criteria', () => {

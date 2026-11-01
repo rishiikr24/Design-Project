@@ -1,6 +1,6 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert');
-const { STANDARD_PHASES, generateMigrationPlan, calculateOverallProgress } = require('../../srv/lib/planner');
+const { STANDARD_PHASES, generateMigrationPlan, calculateOverallProgress } = require('../../legacy-sap/srv/lib/planner');
 
 describe('8-Phase Migration Planner Engine', () => {
   it('contains exactly 8 standard transformation phases', () => {

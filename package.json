@@ -1,34 +1,23 @@
 {
   "name": "saas-transformation",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Enterprise SaaS Transformation Platform",
+  "main": "frontend/dist/index.html",
   "scripts": {
-    "test": "node --test test/unit/*.test.js",
-    "deploy": "cds deploy --to sqlite:sqlite.db",
-    "start": "node server.js",
-    "watch": "cds watch"
+    "start": "npm --prefix frontend run preview",
+    "dev": "npm --prefix frontend run dev",
+    "test": "npm --prefix frontend test",
+    "test:cap": "node --test test/unit/*.test.js",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint"
   },
-  "cds": {
-    "requires": {
-      "db": {
-        "kind": "sqlite",
-        "credentials": {
-          "url": "sqlite.db"
-        }
-      }
-    }
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "@cap-js/sqlite": "^3.1.2",
-    "@sap/cds": "^10.1.1",
-    "express": "^5.3.0"
-  },
-  "devDependencies": {
-    "@sap/cds-dk": "^10.1.0"
-  }
+  "keywords": [
+    "saas",
+    "transformation",
+    "decision-support",
+    "react",
+    "supabase"
+  ],
+  "author": "Rishi Kumar, Aarushi Joshi, Pradyumn Bisen, Akshayadevi K",
+  "license": "ISC"
 }

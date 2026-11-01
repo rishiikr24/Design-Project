@@ -1,6 +1,6 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert');
-const { DEFAULT_WEIGHTS, validateWeights, scoreProduct, evaluateProducts } = require('../../srv/lib/scoring');
+const { DEFAULT_WEIGHTS, validateWeights, scoreProduct, evaluateProducts } = require('../../legacy-sap/srv/lib/scoring');
 
 describe('SaaS Recommendation Scoring Engine', () => {
   const mockProducts = [
