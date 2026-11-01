@@ -91,7 +91,7 @@ export function Topbar() {
             className="bg-transparent text-slate-200 focus:outline-none cursor-pointer pr-1"
           >
             {companies.map((c) => (
-              <option key={c.ID} value={c.ID} className="bg-slate-900 text-slate-200">
+              <option key={c.ID || c.id} value={c.ID || c.id} className="bg-slate-900 text-slate-200">
                 {c.name}
               </option>
             ))}

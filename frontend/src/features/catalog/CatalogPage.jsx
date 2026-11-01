@@ -8,6 +8,8 @@ import { catalogService } from '../../services/catalogService';
 import { authService } from '../../services/authService';
 import { useToast } from '../../components/Toast';
 
+const CATEGORIES = ['All', 'ERP', 'CRM', 'HCM', 'ITSM', 'Productivity', 'Analytics', 'Identity'];
+
 export function CatalogPage() {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -68,14 +70,14 @@ export function CatalogPage() {
   useEffect(() => {
     let result = products;
     if (selectedCategory !== 'All') {
-      result = result.filter(p => p.category.toLowerCase() === selectedCategory.toLowerCase());
+      result = result.filter(p => p.category && p.category.toLowerCase() === selectedCategory.toLowerCase());
     }
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        p.vendor.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q) ||
+        (p.name && p.name.toLowerCase().includes(q)) ||
+        (p.vendor && p.vendor.toLowerCase().includes(q)) ||
+        (p.category && p.category.toLowerCase().includes(q)) ||
         (p.businessFunction && p.businessFunction.toLowerCase().includes(q)) ||
         (p.description && p.description.toLowerCase().includes(q))
       );
@@ -115,7 +117,7 @@ export function CatalogPage() {
     }
   };
 
-  const categories = ['All', 'ERP', 'CRM', 'HCM', 'ITSM', 'Productivity', 'Analytics', 'Identity'];
+
 
   if (loading) {
     return (
@@ -198,7 +200,7 @@ export function CatalogPage() {
         </div>
 
         <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
-          {categories.map((cat) => {
+          {CATEGORIES.map((cat) => {
             const count = cat === 'All' ? products.length : products.filter(p => p.category === cat).length;
             return (
               <button
@@ -460,7 +462,7 @@ export function CatalogPage() {
                 onChange={(e) => setNewProd({ ...newProd, category: e.target.value })}
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500"
               >
-                {categories.filter(c => c !== 'All').map(c => (
+                {CATEGORIES.filter(c => c !== 'All').map(c => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>

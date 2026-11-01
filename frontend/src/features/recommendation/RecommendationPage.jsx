@@ -78,7 +78,7 @@ export function RecommendationPage() {
     showToast('Simulation evaluated with custom weights', 'success');
   };
 
-  const compareProducts = comparing.map(id => allProducts.find(p => p.ID === id)).filter(Boolean);
+  const compareProducts = comparing.map(id => allProducts.find(p => (p.ID || p.id) === id)).filter(Boolean);
 
   const compareAttributes = [
     { label: 'Platform Category', key: 'category' },
@@ -210,7 +210,7 @@ export function RecommendationPage() {
                 className="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-blue-500 max-w-[140px] truncate"
               >
                 {allProducts.map(p => (
-                  <option key={p.ID} value={p.ID} className="bg-slate-900 text-white">
+                  <option key={p.ID || p.id} value={p.ID || p.id} className="bg-slate-900 text-white">
                     {p.name}
                   </option>
                 ))}
@@ -224,7 +224,7 @@ export function RecommendationPage() {
               <tr>
                 <th className="p-3 w-48 font-bold">Dimension</th>
                 {compareProducts.map(p => (
-                  <th key={p.ID} className="p-3 font-bold text-white text-sm">{p.name}</th>
+                  <th key={p.ID || p.id} className="p-3 font-bold text-white text-sm">{p.name}</th>
                 ))}
               </tr>
             </thead>
@@ -233,7 +233,7 @@ export function RecommendationPage() {
                 <tr key={attr.label} className="hover:bg-slate-800/30">
                   <td className="p-3 font-semibold text-slate-400 bg-slate-900/40">{attr.label}</td>
                   {compareProducts.map(p => (
-                    <td key={p.ID} className="p-3 text-slate-200">
+                    <td key={p.ID || p.id} className="p-3 text-slate-200">
                       {attr.render ? attr.render(p) : p[attr.key] || 'N/A'}
                     </td>
                   ))}
