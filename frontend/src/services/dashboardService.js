@@ -1,3 +1,4 @@
+import { supabase, shouldUseMocks } from '../lib/supabase';
 import { assessmentService } from './assessmentService';
 import { recommendationService } from './recommendationService';
 import { riskService } from './riskService';
@@ -10,6 +11,39 @@ export const dashboardService = {
     const evalData = await recommendationService.evaluate({ assessmentId });
     const riskData = await riskService.assessRisks(assessmentId);
     const plan = await plannerService.getPlan({ assessmentId });
+
+    if (!shouldUseMocks()) {
+      try {
+        const { data, error } = await supabase.functions.invoke('dashboard-metrics', {
+          body: {
+            assessment,
+            legacyApplications: assessment?.legacyApplications || [],
+            risks: riskData?.risks || [],
+            plan,
+            topResult: evalData?.results?.[0] || null
+          }
+        });
+
+        if (!error && data) {
+          return {
+            assessment,
+            legacyCount: data.legacyCount,
+            overallRiskLevel: data.overallRiskLevel,
+            risks: riskData.risks,
+            plan,
+            phases: plan.phases,
+            recommendations: evalData.results,
+            postGoLive: {
+              adoptionRate: data.adoptionRate,
+              costEfficiency: data.costEfficiency,
+              licenseUtilization: data.licenseUtilization
+            }
+          };
+        }
+      } catch {
+        // Fallback to local aggregation
+      }
+    }
 
     return {
       assessment,
@@ -33,4 +67,3 @@ export const dashboardService = {
     };
   }
 };
-

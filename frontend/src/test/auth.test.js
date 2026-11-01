@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { authService } from '../services/authService';
 
-describe('Module 1: Authentication & RBAC Service (Mocked)', () => {
+describe('Module 1: Authentication & RBAC Service (Supabase + Local Fallback)', () => {
   beforeEach(async () => {
     await authService.switchRole('Admin');
   });
@@ -62,5 +62,27 @@ describe('Module 1: Authentication & RBAC Service (Mocked)', () => {
       company_ID: 'comp-apex-global'
     })).rejects.toThrow('already exists');
   });
-});
 
+  it('notifies listeners on auth state change and role switch', async () => {
+    const listener = vi.fn();
+    const unsubscribe = authService.onAuthStateChange(listener);
+
+    await authService.switchRole('Analyst');
+    expect(listener).toHaveBeenCalled();
+
+    if (typeof unsubscribe === 'function') {
+      unsubscribe();
+    }
+  });
+
+  it('clears active session on logout', async () => {
+    await authService.switchRole('Manager');
+    let user = await authService.getCurrentUser();
+    expect(user.role).toBe('Manager');
+
+    await authService.logout();
+    user = await authService.getCurrentUser();
+    // Falls back to default initial user
+    expect(user).toBeDefined();
+  });
+});

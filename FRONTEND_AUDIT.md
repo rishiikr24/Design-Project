@@ -14,7 +14,8 @@
 
 Although styled to replicate the **SAP Fiori Horizon** design language (Morning/Evening themes), the existing frontend in `app/saas-ui/webapp/` is **not** a real SAPUI5 or OpenUI5 application.
 
-### Direct Evidence:
+### Direct Evidence
+
 1. **No SAPUI5 Manifest or Components:**
    - `manifest.json`: **Not found**.
    - `Component.js`: **Not found**.
@@ -71,6 +72,7 @@ The frontend interfaces with the Node.js backend entirely via **Express REST end
 ## 4. Form Fields & Validation Rules
 
 ### 4.1 Enterprise Assessment Wizard Form (`#assessment-form`)
+
 The form spans 5 guided steps:
 
 1. **Step 1: Enterprise Profile & Scale**
@@ -117,6 +119,7 @@ The form spans 5 guided steps:
    - **Role Restriction:** If role is `Viewer`, submission is blocked with Toast: *"Viewer Role is read-only. Switch role to Manager or Admin to modify."*
 
 ### 4.2 Admin Add/Edit Product Form (`#admin-product-form`)
+
 - Fields: `admin-inp-name`, `admin-inp-vendor`, `admin-inp-category`, `admin-inp-pricing`, `admin-inp-cost` (10-100), `admin-inp-security` (10-100), `admin-inp-scalability` (10-100), `admin-inp-integration` (10-100), `admin-inp-features` (10-100), `admin-inp-complexity` (Low/Medium/High), `admin-inp-desc`.
 - Validation: HTML5 required inputs and role check (`state.role === 'Admin'`).
 
@@ -134,7 +137,7 @@ The form spans 5 guided steps:
 | **Post-Go-Live Telemetry** | 3-Column Metric Box | Adoption Rate (`#tele-adoption`: 88.4%), Cost Efficiency (`#tele-efficiency`: +24.6%), License Utilization (`#tele-license`: 92.1%) | `GET /api/dashboard/:id` $\rightarrow$ `data.postGoLive` |
 | **Risk Distribution List** | Progress List | `#dash-risk-distribution-list` (top 4 risks with score/25 and severity bar) | `GET /api/dashboard/:id` $\rightarrow$ `data.risks.slice(0, 4)` |
 | **5x5 Risk Heatmap Matrix** | 25-cell Color Matrix Grid | `#risk-heatmap-grid` (Probability 1-5 vs Impact 1-5; green/yellow/orange/red) | `POST /api/risks` $\rightarrow$ `data.risks` mapped by `(prob, imp)` |
-| **Product Comparison Matrix**| Side-by-Side Comparison Table | `#compare-matrix-container` (10 comparative dimensions across 3 products) | `state.products` filtered by `#compare-sel-1/2/3` |
+| **Product Comparison Matrix** | Side-by-Side Comparison Table | `#compare-matrix-container` (10 comparative dimensions across 3 products) | `state.products` filtered by `#compare-sel-1/2/3` |
 | **8-Phase Roadmap Phasing** | Interactive Timeline Cards | `#phases-timeline-container` (8 phases with dates, progress bars, dropdowns) | `POST /api/plan` or dashboard $\rightarrow$ `plan.phases` |
 
 ---
@@ -142,21 +145,25 @@ The form spans 5 guided steps:
 ## 6. Navigation, i18n, Custom CSS & Auth Analysis
 
 ### 6.1 Navigation & Routing
+
 - Handled entirely client-side via `SaaSPlatformApp.prototype.navigateToTab(tabName)` in `app.js`.
 - It toggles `.active` CSS classes across `.nav-tab` buttons and `.tab-content` sections.
 - **No browser history routing** (`react-router`, hash-based routing, or `history.pushState`): Refreshing always resets view to the initial state (Dashboard).
 
 ### 6.2 Internationalization (i18n)
+
 - **Not found / None.**
 - All UI labels, error messages, toast strings, and placeholder texts are hardcoded in English inside `index.html` and `app.js`. There are no `.properties` or `i18n.json` resource bundles.
 
 ### 6.3 Custom CSS Design System
+
 - `app/saas-ui/webapp/index.css` is an extensive 2,068-line file replicating SAP Fiori Horizon design tokens:
   - Supports dynamic theme toggling (`body.theme-dark` vs `:root` light tokens).
   - Colors: Brand SAP Blue (`#0070F2` / `#3B82F6`), Cyan (`#0092FF`), Teal (`#0F828F`), Amber (`#E9730C`), Red (`#BB0000`).
   - Typography: Linked from Google Fonts (`Inter` for UI, `JetBrains Mono` for code/numbers).
 
 ### 6.4 Authentication & Approuter Usage
+
 - `app/approuter/xs-app.json` defines standard SAP BTP Approuter configuration with `authenticationMethod: "route"` and `authenticationType: "xsuaa"` for `/odata/v4/*` and `/api/*`.
 - `xs-security.json` defines four platform scopes and role templates: `TransformationAdmin`, `TransformationManager`, `TransformationAnalyst`, `TransformationViewer`.
 - **However, in the actual frontend (`saas-ui`), auth is simulated:**
@@ -200,18 +207,23 @@ The form spans 5 guided steps:
 ## 9. Verification & Execution Report (`npm install && npm start`)
 
 ### 9.1 `npm install` Execution
+
 - **Command:** `npm.cmd install`
 - **Output:**
+
   ```text
   up to date in 2s
   37 packages are looking for funding
     run `npm fund` for details
   ```
+
 - **Exit Code:** `0` (Success). All dependencies declared in `package.json` are installed and up to date.
 
 ### 9.2 Unit Test Execution (`npm test`)
+
 - **Command:** `npm.cmd test` (`node --test test/unit/*.test.js`)
 - **Output:**
+
   ```text
   > saas-transformation@1.0.0 test
   > node --test test/unit/*.test.js
@@ -243,11 +255,14 @@ The form spans 5 guided steps:
   ℹ fail 0
   ℹ duration_ms 110.8978
   ```
+
 - **Exit Code:** `0` (All 13 tests passed).
 
 ### 9.3 Server Startup & Runtime Diagnostics
+
 - **Command:** `node server.js`
 - **Output:**
+
   ```text
   =======================================================
   SAP Enterprise SaaS Transformation Platform is running!
@@ -255,6 +270,7 @@ The form spans 5 guided steps:
   OData V4 and REST services active.
   =======================================================
   ```
+
 - **Data & Model Verification:**
   - `cds.load(['db/schema.cds'])`: Loaded successfully.
   - SQLite database `sqlite.db`: Verified via direct CDS query:
@@ -270,10 +286,10 @@ The form spans 5 guided steps:
 The frontend is a single-page application built with vanilla HTML/JS/CSS that faithfully implements 7 of the 8 business modules and partially implements Module 1 (via role simulation). It communicates with the backend exclusively through 10 clean REST endpoints in `server.js`.
 
 Porting to **React (Vite) + Tailwind CSS + React Router + Recharts** will be straightforward and clean because:
+
 1. No opaque SAPUI5 framework bindings need to be reversed.
 2. The UI structure maps directly to React components (ShellBar, Tabs, Forms, Matrices, Heatmaps, Charts, Modals).
 3. The REST API contracts are well-defined and can be preserved or directly mirrored into Supabase Postgres + Edge Functions.
-
 
 ---
 
@@ -293,6 +309,7 @@ The table below provides the comprehensive status across all 8 modules following
 | **Module 8: AI Transformation Advisor** | Conversational transformation advisor, 5 suggested prompt chips, deterministic local responses, typing indicator, zero API keys in frontend | **Implemented** | **Implemented** (100%) | `src/features/assistant/AssistantPage.jsx`, `src/services/assistantService.js` *(Flagged as New UI / Mocked Service)* | Interactive message stream, empty state, active toggle, prompt chip selection verified |
 
 ### Verification Summary
+
 - **Unit & Integration Tests:** 7 test suites, 41/41 unit tests passing (`npm run test` in `frontend/`).
 - **ESLint Validation:** 0 warnings, 0 errors (`npm run lint` in `frontend/`).
 - **Vite Production Build:** Successfully bundled in 18.67s (`npm run build` in `frontend/`).
