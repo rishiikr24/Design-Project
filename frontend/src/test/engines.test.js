@@ -13,6 +13,9 @@ import {
 import {
   calculateDashboardMetrics
 } from '../../../supabase/functions/dashboard-metrics/index.ts';
+import {
+  answerQuestionDeterministic
+} from '../../../supabase/functions/assistant-advisor/index.ts';
 
 describe('Ported Engines (Edge & Postgres Function Logic Parity)', () => {
   // --------------------------------------------------------------------------
@@ -201,4 +204,42 @@ describe('Ported Engines (Edge & Postgres Function Logic Parity)', () => {
       expect(metrics.licenseUtilization).toBe(92.1);
     });
   });
+
+  describe('4. AI Assistant Advisor (assistant-advisor)', () => {
+    it('answers scoring questions with mathematical fit and rankings', () => {
+      const response = answerQuestionDeterministic('Why is the top product ranked #1?', {
+        results: [
+          {
+            productName: 'SAP S/4HANA Cloud',
+            totalScore: 91.2,
+            costSubScore: 80,
+            securitySubScore: 96,
+            scalabilitySubScore: 98,
+            integrationSubScore: 95,
+            featuresSubScore: 98,
+            reason: 'Top ERP alignment'
+          }
+        ]
+      });
+
+      expect(response.category).toBe('Scoring Rationale');
+      expect(response.answer).toContain('Rank #1');
+      expect(response.answer).toContain('SAP S/4HANA Cloud');
+      expect(response.answer).toContain('91.2/100');
+    });
+
+    it('answers risk questions with critical mitigations', () => {
+      const response = answerQuestionDeterministic('What are our most critical risks?', {
+        risks: [
+          { riskTitle: 'Data Loss', severity: 'Critical', score: 20, mitigation: 'Checksum validation' }
+        ],
+        assessment: { infrastructure: 'On-premise', dataSensitivity: 'High' }
+      });
+
+      expect(response.category).toBe('Risk Analysis');
+      expect(response.answer).toContain('Data Loss');
+      expect(response.answer).toContain('Critical');
+    });
+  });
 });
+

@@ -115,3 +115,4 @@ BEGIN
     WHERE a.id = p_assessment_id;
 END;
 $$;
+
