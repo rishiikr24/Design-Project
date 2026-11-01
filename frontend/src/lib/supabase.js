@@ -92,6 +92,11 @@ function createMockSupabaseClient() {
   const auth = new MockSupabaseAuth();
   return {
     auth,
+    functions: {
+      async invoke(_name, _options) {
+        return { data: null, error: null };
+      }
+    },
     from(_table) {
       return {
         select() {
