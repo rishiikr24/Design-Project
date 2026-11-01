@@ -10,6 +10,11 @@ export const isSupabaseConfigured = Boolean(
   supabaseUrl.startsWith('http')
 );
 
+export const shouldUseMocks = () => {
+  if (import.meta.env.VITE_USE_MOCKS === 'true') return true;
+  return !isSupabaseConfigured;
+};
+
 // Fallback in-memory storage for test/offline environments
 class MockSupabaseAuth {
   constructor() {

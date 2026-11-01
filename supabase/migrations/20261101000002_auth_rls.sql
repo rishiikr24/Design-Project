@@ -546,3 +546,4 @@ CREATE POLICY "Allow analyst and manager insert assistant_messages"
             assessment_id IN (SELECT id FROM public.assessments WHERE company_id = public.get_auth_company_id())
         )
     );
+
