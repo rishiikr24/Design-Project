@@ -434,3 +434,4 @@ VALUES
         'Standard zero trust baseline required.'
     )
 ON CONFLICT (id) DO NOTHING;
+

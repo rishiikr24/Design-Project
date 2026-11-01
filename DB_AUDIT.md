@@ -341,3 +341,52 @@ docker : The term 'docker' is not recognized as the name of a cmdlet, function, 
      supabase db reset
      ```
   4. Alternatively, execute `supabase/migrations/20261101000001_initial_schema.sql` and `supabase/seed.sql` directly into a hosted Supabase project via the Supabase Dashboard SQL Editor.
+
+
+
+---
+
+## 8. Step B2: Auth, RBAC & Row Level Security (RLS) Specification
+
+### 8.1 Scopes Extraction from `xs-security.json`
+`xs-security.json` defines four platform scopes and tenant attribute scoping:
+1. **`$XSAPPNAME.Admin`:** Platform owner — manages SaaS catalog, risk templates, all tenant companies, and user profiles.
+2. **`$XSAPPNAME.Manager`:** Enterprise IT Lead — creates assessments, sets criteria weights, manages roadmap plans, approves cutovers. Scoped by attribute `company`.
+3. **`$XSAPPNAME.Analyst`:** Enterprise Analyst — inputs assessment parameters, legacy monolith inventory, runs evaluation scoring and risk analysis. Scoped by attribute `company`.
+4. **`$XSAPPNAME.Viewer`:** Executive Stakeholder — read-only access to dashboard, evaluation rankings, risk exposure heatmap, and roadmap timeline. Scoped by attribute `company`.
+
+### 8.2 Role-to-Postgres Mapping (`profiles` Table)
+```sql
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    username TEXT UNIQUE,
+    full_name TEXT,
+    email TEXT UNIQUE,
+    role VARCHAR(20) NOT NULL DEFAULT 'viewer' CHECK (LOWER(role) IN ('admin', 'manager', 'analyst', 'viewer')),
+    company_id TEXT REFERENCES public.companies(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    modified_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp()
+);
+```
+
+### 8.3 RLS Policy Hierarchy & Capabilities
+- **`public.is_admin()`:** Returns true for `admin`. Full access across all companies, SaaS catalog mutations, and risk template authoring.
+- **`public.is_manager()`:** Returns true for `admin` and `manager`. Can insert/update/delete company assessments, migration plans, phases, and criteria weights within `company_id`.
+- **`public.is_analyst()`:** Returns true for `admin`, `manager`, and `analyst`. Can manage legacy applications, requirements, evaluations, and assessed risks within `company_id`.
+- **`viewer`:** Can strictly `SELECT` records where `company_id = public.get_auth_company_id()`. All mutation attempts (`INSERT`, `UPDATE`, `DELETE`) are rejected by RLS.
+- **Tenant Isolation:** Enforced across all queries via `company_id = public.get_auth_company_id()`. Multi-tenant cross-talk is prevented at the database kernel level.
+
+### 8.4 Automated SQL Test Suite (`supabase/tests/rls_tests.sql`)
+The test script verifies all 6 core security scenarios in a transactional test sandbox:
+1. `TEST 1`: Anonymous Access Denial (public unauthenticated queries blocked).
+2. `TEST 2`: Multi-Tenant Isolation (`comp-novasystems` manager cannot see `comp-apex-global` records).
+3. `TEST 3`: Viewer Role Enforcement (read-only allowed; INSERT/UPDATE rejected).
+4. `TEST 4`: Analyst Scope Boundaries (can manage legacy apps; cannot modify catalog).
+5. `TEST 5`: Manager Scope Execution (can create and manage roadmap plans).
+6. `TEST 6`: Admin Global Access (cross-tenant visibility and SaaS catalog write authority).
+
+### 8.5 Frontend Integration
+- Installed `@supabase/supabase-js` into `frontend/`.
+- Created [`frontend/src/lib/supabase.js`](file:///c:/Users/rishi/.gemini/antigravity-ide/scratch/saas-transformation/frontend/src/lib/supabase.js) with client configuration and an offline fallback client for local environments.
+- Replaced mock authentication in [`frontend/src/services/authService.js`](file:///c:/Users/rishi/.gemini/antigravity-ide/scratch/saas-transformation/frontend/src/services/authService.js) with Supabase Auth (`signInWithPassword`, `signUp`, `signOut`, `getUser`, `onAuthStateChange`).
+- Hardened [`frontend/src/app/ProtectedRoute.jsx`](file:///c:/Users/rishi/.gemini/antigravity-ide/scratch/saas-transformation/frontend/src/app/ProtectedRoute.jsx) with role hierarchy enforcement (`Admin > Manager > Analyst > Viewer`), redirecting unauthenticated users to `/login` and rendering styled access restriction notices when required privileges are unmet.

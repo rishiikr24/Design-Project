@@ -406,3 +406,4 @@ SELECT
     COUNT(r.id)::INTEGER AS count_by_severity
 FROM assessed_risks r
 GROUP BY r.assessment_id, r.severity;
+
