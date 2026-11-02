@@ -4,6 +4,12 @@
 // Ported from: srv/lib/scoring.js and srv/lib/reasons.js
 // ==============================================================================
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 export const DEFAULT_WEIGHTS = {
   cost: 20,
   security: 30,
@@ -12,7 +18,7 @@ export const DEFAULT_WEIGHTS = {
   features: 10
 };
 
-export function validateWeights(weights = {}) {
+export function validateWeights(weights: any = {}) {
   const sum = 
     (Number(weights.cost) || 0) +
     (Number(weights.security) || 0) +
@@ -23,13 +29,13 @@ export function validateWeights(weights = {}) {
   return Math.abs(sum - 100) < 0.001;
 }
 
-export function generateReason(product, weights = DEFAULT_WEIGHTS, assessmentContext = {}) {
+export function generateReason(product: any, weights = DEFAULT_WEIGHTS, assessmentContext: any = {}) {
   const sortedCriteria = [
-    { key: 'Security', weight: weights.security, score: product.securityScore },
-    { key: 'Scalability', weight: weights.scalability, score: product.scalabilityScore },
-    { key: 'Cost', weight: weights.cost, score: product.costScore },
-    { key: 'Integration', weight: weights.integration, score: product.integrationScore },
-    { key: 'Features', weight: weights.features, score: product.featuresScore }
+    { key: 'Security', weight: weights.security, score: product.securityScore ?? product.security_score },
+    { key: 'Scalability', weight: weights.scalability, score: product.scalabilityScore ?? product.scalability_score },
+    { key: 'Cost', weight: weights.cost, score: product.costScore ?? product.cost_score },
+    { key: 'Integration', weight: weights.integration, score: product.integrationScore ?? product.integration_score },
+    { key: 'Features', weight: weights.features, score: product.featuresScore ?? product.features_score }
   ].sort((a, b) => b.weight - a.weight);
 
   const primary = sortedCriteria[0];
@@ -37,23 +43,23 @@ export function generateReason(product, weights = DEFAULT_WEIGHTS, assessmentCon
 
   let reason = `Recommended as top choice primarily due to strong alignment with prioritized ${primary.key} requirements (weight ${primary.weight}%, sub-score ${primary.score}/100) and robust ${secondary.key} capabilities (${secondary.score}/100).`;
 
-  if (assessmentContext.dataSensitivity === 'High' && product.securityScore >= 90) {
-    reason += ` High security rating (${product.securityRating || 'Certified'}) directly satisfies enterprise data sensitivity mandate.`;
+  if (assessmentContext.dataSensitivity === 'High' && (product.securityScore ?? product.security_score) >= 90) {
+    reason += ` High security rating (${product.securityRating || product.security_rating || 'Certified'}) directly satisfies enterprise data sensitivity mandate.`;
   }
 
-  if (assessmentContext.infrastructure === 'On-premise' && product.integrationScore >= 85) {
-    reason += ` Strong integration index (${product.integrationScore}/100) mitigates legacy on-premise connector risks.`;
+  if (assessmentContext.infrastructure === 'On-premise' && (product.integrationScore ?? product.integration_score) >= 85) {
+    reason += ` Strong integration index (${product.integrationScore ?? product.integration_score}/100) mitigates legacy on-premise connector risks.`;
   }
 
   return reason;
 }
 
-export function scoreProduct(product, weights = DEFAULT_WEIGHTS, assessmentContext = {}) {
-  const costScore = Number(product.costScore) || 0;
-  const securityScore = Number(product.securityScore) || 0;
-  const scalabilityScore = Number(product.scalabilityScore) || 0;
-  const integrationScore = Number(product.integrationScore) || 0;
-  const featuresScore = Number(product.featuresScore) || 0;
+export function scoreProduct(product: any, weights = DEFAULT_WEIGHTS, assessmentContext: any = {}) {
+  const costScore = Number(product.costScore ?? product.cost_score) || 0;
+  const securityScore = Number(product.securityScore ?? product.security_score) || 0;
+  const scalabilityScore = Number(product.scalabilityScore ?? product.scalability_score) || 0;
+  const integrationScore = Number(product.integrationScore ?? product.integration_score) || 0;
+  const featuresScore = Number(product.featuresScore ?? product.features_score) || 0;
 
   const totalScore = Number((
     (costScore * (weights.cost / 100)) +
@@ -80,7 +86,7 @@ export function scoreProduct(product, weights = DEFAULT_WEIGHTS, assessmentConte
   };
 }
 
-export function evaluateProducts(products = [], weights = DEFAULT_WEIGHTS, assessmentContext = {}) {
+export function evaluateProducts(products: any[] = [], weights = DEFAULT_WEIGHTS, assessmentContext: any = {}) {
   let candidates = [...products];
 
   if (assessmentContext.targetCategory && assessmentContext.targetCategory !== 'All') {
@@ -97,37 +103,47 @@ export function evaluateProducts(products = [], weights = DEFAULT_WEIGHTS, asses
   }));
 }
 
-// Deno / Supabase Edge Function Handler
-export default async function handler(req: Request) {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-      }
-    });
-  }
-
-  try {
-    const { products = [], weights = DEFAULT_WEIGHTS, assessmentContext = {} } = await req.json();
-
-    if (!validateWeights(weights)) {
-      return new Response(JSON.stringify({ error: 'Criteria weights must total exactly 100%' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-      });
+// Edge Function Handler using Deno.serve (standard modern runtime)
+// @ts-ignore: Deno runtime
+if (typeof Deno !== 'undefined' && Deno.serve) {
+  // @ts-ignore: Deno runtime
+  Deno.serve(async (req: Request) => {
+    // 1. Synchronously respond to CORS preflight
+    if (req.method === 'OPTIONS') {
+      return new Response('ok', { headers: corsHeaders });
     }
 
-    const results = evaluateProducts(products, weights, assessmentContext);
+    try {
+      const { products = [], weights = DEFAULT_WEIGHTS, assessmentContext = {} } = await req.json();
 
-    return new Response(JSON.stringify({ results, weights }), {
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
-  } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
-  }
+      if (!validateWeights(weights)) {
+        return new Response(JSON.stringify({ error: 'Criteria weights must total exactly 100%' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      const results = evaluateProducts(products, weights, assessmentContext);
+
+      return new Response(JSON.stringify({ results, weights }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    } catch (err: any) {
+      return new Response(JSON.stringify({ error: err.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+  });
 }
 
+export default async function handler(req: Request) {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+  const { products = [], weights = DEFAULT_WEIGHTS, assessmentContext = {} } = await req.json();
+  const results = evaluateProducts(products, weights, assessmentContext);
+  return new Response(JSON.stringify({ results, weights }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+  });
+}

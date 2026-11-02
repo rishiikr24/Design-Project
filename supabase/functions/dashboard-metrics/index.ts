@@ -4,6 +4,12 @@
 // Ported from: srv/dashboard-service.js
 // ==============================================================================
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 export function calculateDashboardMetrics({
   assessment = {},
   legacyApplications = [],
@@ -38,28 +44,37 @@ export function calculateDashboardMetrics({
   };
 }
 
-export default async function handler(req: Request) {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-      }
-    });
-  }
+// @ts-ignore: Deno runtime
+if (typeof Deno !== 'undefined' && Deno.serve) {
+  // @ts-ignore: Deno runtime
+  Deno.serve(async (req: Request) => {
+    if (req.method === 'OPTIONS') {
+      return new Response('ok', { headers: corsHeaders });
+    }
 
-  try {
-    const body = await req.json();
-    const metrics = calculateDashboardMetrics(body);
+    try {
+      const body = await req.json();
+      const metrics = calculateDashboardMetrics(body);
 
-    return new Response(JSON.stringify(metrics), {
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
-  } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
-  }
+      return new Response(JSON.stringify(metrics), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    } catch (err: any) {
+      return new Response(JSON.stringify({ error: err.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+  });
 }
 
+export default async function handler(req: Request) {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+  const body = await req.json();
+  const metrics = calculateDashboardMetrics(body);
+  return new Response(JSON.stringify(metrics), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+  });
+}
