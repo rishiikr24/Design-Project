@@ -244,6 +244,19 @@ export function RecommendationPage() {
         </CardContent>
       </Card>
 
+      {results.length === 0 && (
+        <Card className="p-8 text-center bg-slate-900 border-slate-800 space-y-4">
+          <h3 className="text-base font-bold text-white">No Recommendations Available</h3>
+          <p className="text-xs text-slate-400 max-w-md mx-auto">
+            No product recommendations could be calculated. Complete an enterprise assessment or recalculate with custom criteria.
+          </p>
+          <Button variant="primary" size="sm" onClick={() => runEvaluation()}>
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Recalculate Recommendations</span>
+          </Button>
+        </Card>
+      )}
+
       {/* Ranked Recommendations Leaderboard */}
       <div className="space-y-4">
         <h3 className="text-base font-bold text-white tracking-tight">Ranked Recommendations Leaderboard</h3>

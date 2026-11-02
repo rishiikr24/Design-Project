@@ -8,6 +8,9 @@ import referenceCase from '../data/referenceCase.json';
 export const dashboardService = {
   async getDashboardMetrics(assessmentId = 'assessment-ref-case') {
     const assessment = await assessmentService.getAssessmentById(assessmentId);
+    if (!assessment) {
+      return null;
+    }
     const evalData = await recommendationService.evaluate({ assessmentId });
     const riskData = await riskService.assessRisks(assessmentId);
     const plan = await plannerService.getPlan({ assessmentId });

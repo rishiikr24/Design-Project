@@ -75,10 +75,7 @@ export const catalogService = {
     if (!shouldUseMocks()) {
       try {
         const { data, error } = await supabase
-          .from('saas_products')
-          .select('*')
-          .eq('id', id)
-          .single();
+          .from('saas_products').select('*').eq('id', id).maybeSingle();
 
         if (!error && data) {
           return mapProductFromPostgres(data);

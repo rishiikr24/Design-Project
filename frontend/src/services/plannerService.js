@@ -47,7 +47,7 @@ export const plannerService = {
           .select('*, migration_phases(*)')
           .eq('assessment_id', assessmentId)
           .eq('selected_product_id', productId)
-          .single();
+          .maybeSingle();
 
         if (!error && dbPlan) {
           planState = mapPlanFromPostgres(dbPlan, dbPlan.migration_phases || []);
