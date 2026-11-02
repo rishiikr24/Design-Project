@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Sparkles, Building2 } from 'lucide-react';
+import { Sparkles, Building2, LogOut } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
 import { authService } from '../services/authService';
 import { companyService } from '../services/companyService';
 import { dashboardService } from '../services/dashboardService';
+import { shouldUseMocks } from '../lib/supabase';
 import { useToast } from '../components/Toast';
 
 export function Topbar() {
@@ -13,15 +14,30 @@ export function Topbar() {
   const [selectedCompanyId, setSelectedCompanyId] = useState('comp-apex-global');
   const [isSeeding, setIsSeeding] = useState(false);
   const { showToast } = useToast();
+  const isMockMode = shouldUseMocks();
 
   useEffect(() => {
     async function loadShellData() {
       const user = await authService.getCurrentUser();
       setCurrentUser(user);
+      if (user?.company_id || user?.company_ID) {
+        setSelectedCompanyId(user.company_id || user.company_ID);
+      }
       const data = await companyService.getCompanies();
       setCompanies(data.companies || []);
     }
     loadShellData();
+
+    const handleRoleChanged = (e) => {
+      if (e.detail) {
+        setCurrentUser(e.detail);
+        if (e.detail.company_id || e.detail.company_ID) {
+          setSelectedCompanyId(e.detail.company_id || e.detail.company_ID);
+        }
+      }
+    };
+    window.addEventListener('saas:role_changed', handleRoleChanged);
+    return () => window.removeEventListener('saas:role_changed', handleRoleChanged);
   }, []);
 
   const handleRoleChange = async (e) => {
@@ -34,7 +50,7 @@ export function Topbar() {
   const handleCompanyChange = (e) => {
     const id = e.target.value;
     setSelectedCompanyId(id);
-    const comp = companies.find((c) => c.ID === id);
+    const comp = companies.find((c) => c.ID === id || c.id === id);
     showToast(`Switched active tenant to: ${comp ? comp.name : id}`, 'info');
   };
 
@@ -50,6 +66,20 @@ export function Topbar() {
       setIsSeeding(false);
     }
   };
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      showToast('Signed out successfully', 'info');
+      window.location.assign('/login');
+    } catch (err) {
+      showToast(`Sign out failed: ${err.message}`, 'danger');
+    }
+  };
+
+  // Resolve user display company
+  const userCompany = companies.find(c => (c.ID || c.id) === selectedCompanyId)?.name ||
+    (currentUser?.company_id || currentUser?.company_ID || 'Organization');
 
   return (
     <header className="h-16 bg-slate-900/90 border-b border-slate-800 px-5 flex items-center justify-between shrink-0 backdrop-blur-md">
@@ -70,66 +100,98 @@ export function Topbar() {
 
       {/* Action controls */}
       <div className="flex items-center gap-3">
-        {/* 1-Click Load Reference Case */}
-        <Button
-          variant="outlineCyan"
-          size="sm"
-          onClick={handleSeedReferenceCase}
-          disabled={isSeeding}
-          title="Load 1,000-employee on-premise reference case"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-          <span>{isSeeding ? 'Seeding...' : 'Load Reference Case'}</span>
-        </Button>
-
-        {/* Company Selector */}
-        <div className="flex items-center gap-1.5 bg-slate-800/80 border border-slate-700 rounded-lg px-2.5 py-1 text-xs">
-          <Building2 className="w-3.5 h-3.5 text-slate-400" />
-          <select
-            value={selectedCompanyId}
-            onChange={handleCompanyChange}
-            className="bg-transparent text-slate-200 focus:outline-none cursor-pointer pr-1"
+        {/* 1-Click Load Reference Case (Only in Mock / Sandbox Mode) */}
+        {isMockMode && (
+          <Button
+            variant="outlineCyan"
+            size="sm"
+            onClick={handleSeedReferenceCase}
+            disabled={isSeeding}
+            title="Load 1,000-employee on-premise reference case"
           >
-            {companies.map((c) => (
-              <option key={c.ID || c.id} value={c.ID || c.id} className="bg-slate-900 text-slate-200">
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <span>{isSeeding ? 'Seeding...' : 'Load Reference Case'}</span>
+          </Button>
+        )}
 
-        {/* Role Switcher */}
-        <div className="flex items-center gap-1.5 bg-slate-800/80 border border-slate-700 rounded-lg px-2.5 py-1 text-xs">
+        {/* Company Selector or Live Tenant Display */}
+        {isMockMode ? (
+          <div className="flex items-center gap-1.5 bg-slate-800/80 border border-slate-700 rounded-lg px-2.5 py-1 text-xs">
+            <Building2 className="w-3.5 h-3.5 text-slate-400" />
+            <select
+              value={selectedCompanyId}
+              onChange={handleCompanyChange}
+              className="bg-transparent text-slate-200 focus:outline-none cursor-pointer pr-1"
+            >
+              {companies.map((c) => (
+                <option key={c.ID || c.id} value={c.ID || c.id} className="bg-slate-900 text-slate-200">
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 bg-slate-800/80 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-300">
+            <Building2 className="w-3.5 h-3.5 text-slate-400" />
+            <span className="font-medium max-w-[160px] truncate">{userCompany}</span>
+          </div>
+        )}
+
+        {/* Role Display / Switcher */}
+        {isMockMode ? (
+          <div className="flex items-center gap-1.5 bg-slate-800/80 border border-slate-700 rounded-lg px-2.5 py-1 text-xs">
+            <Badge
+              variant={
+                currentUser?.role === 'Admin'
+                  ? 'primary'
+                  : currentUser?.role === 'Manager'
+                  ? 'cyan'
+                  : currentUser?.role === 'Analyst'
+                  ? 'purple'
+                  : 'default'
+              }
+            >
+              {currentUser?.role || 'Admin'}
+            </Badge>
+            <select
+              value={currentUser?.role || 'Admin'}
+              onChange={handleRoleChange}
+              className="bg-transparent text-slate-200 focus:outline-none cursor-pointer"
+            >
+              <option value="Admin" className="bg-slate-900 text-slate-200">Role: Admin</option>
+              <option value="Manager" className="bg-slate-900 text-slate-200">Role: Manager</option>
+              <option value="Analyst" className="bg-slate-900 text-slate-200">Role: Analyst</option>
+              <option value="Viewer" className="bg-slate-900 text-slate-200">Role: Viewer (Read-only)</option>
+            </select>
+          </div>
+        ) : (
           <Badge
             variant={
-              currentUser?.role === 'Admin'
+              (currentUser?.role || '').toLowerCase() === 'admin'
                 ? 'primary'
-                : currentUser?.role === 'Manager'
+                : (currentUser?.role || '').toLowerCase() === 'manager'
                 ? 'cyan'
-                : currentUser?.role === 'Analyst'
+                : (currentUser?.role || '').toLowerCase() === 'analyst'
                 ? 'purple'
                 : 'default'
             }
           >
-            {currentUser?.role || 'Admin'}
+            Role: {currentUser?.role || 'Viewer'}
           </Badge>
-          <select
-            value={currentUser?.role || 'Admin'}
-            onChange={handleRoleChange}
-            className="bg-transparent text-slate-200 focus:outline-none cursor-pointer"
-          >
-            <option value="Admin" className="bg-slate-900 text-slate-200">Role: Admin</option>
-            <option value="Manager" className="bg-slate-900 text-slate-200">Role: Manager</option>
-            <option value="Analyst" className="bg-slate-900 text-slate-200">Role: Analyst</option>
-            <option value="Viewer" className="bg-slate-900 text-slate-200">Role: Viewer (Read-only)</option>
-          </select>
-        </div>
+        )}
 
-        {/* User profile avatar */}
-        <div className="flex items-center gap-2 pl-2 border-l border-slate-800" title={currentUser?.email || ''}>
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
-            {currentUser?.fullName?.split(' ').map((n) => n[0]).slice(0, 2).join('') || 'RK'}
+        {/* User profile avatar & Sign out */}
+        <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-white text-xs font-bold shadow-md" title={currentUser?.email || ''}>
+            {currentUser?.fullName?.split(' ').map((n) => n[0]).slice(0, 2).join('') || 'U'}
           </div>
+          <button
+            onClick={handleLogout}
+            title="Sign out"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </header>

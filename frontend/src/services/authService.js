@@ -85,10 +85,7 @@ export const authService = {
         if (user) {
           // Fetch profile details
           const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
+            .from('profiles').select('*').eq('id', user.id).maybeSingle();
 
           const normalized = normalizeUser(user, profile ? {
             full_name: profile.full_name,
