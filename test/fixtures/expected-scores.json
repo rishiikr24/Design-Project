@@ -1,0 +1,240 @@
+{
+  "comp-fixture-global-corp": {
+    "companyName": "Global Logistics Enterprise",
+    "targetCategory": "All",
+    "weightsUsed": {
+      "cost": 20,
+      "security": 30,
+      "scalability": 25,
+      "integration": 15,
+      "features": 10
+    },
+    "note": "computed by the existing CAP engine, not independently validated",
+    "results": [
+      {
+        "rank": 1,
+        "productId": "ms-entra-id",
+        "productName": "Microsoft Entra ID",
+        "vendor": "Microsoft",
+        "category": "Identity",
+        "totalScore": 95.75,
+        "costSubScore": 89,
+        "securitySubScore": 98,
+        "scalabilitySubScore": 99,
+        "integrationSubScore": 96,
+        "featuresSubScore": 94,
+        "reason": "Strong alignment on top-priority criterion Security (30% weight) with an outstanding rating of 98/100. Matches High Data Sensitivity mandate with enterprise-grade certifications (FedRAMP High / ISO 27001 / SOC 1-3 / CSA). Proven multi-tenant elasticity accommodates 500+ users and expected annual expansion."
+      },
+      {
+        "rank": 2,
+        "productId": "microsoft-365",
+        "productName": "Microsoft 365 Enterprise",
+        "vendor": "Microsoft",
+        "category": "Productivity",
+        "totalScore": 94.2,
+        "costSubScore": 88,
+        "securitySubScore": 96,
+        "scalabilitySubScore": 98,
+        "integrationSubScore": 92,
+        "featuresSubScore": 95,
+        "reason": "Strong alignment on top-priority criterion Security (30% weight) with an outstanding rating of 96/100. Matches High Data Sensitivity mandate with enterprise-grade certifications (FedRAMP High / ISO 27001 / HIPAA / SOC2). Proven multi-tenant elasticity accommodates 500+ users and expected annual expansion. Advantage: Low migration complexity accelerates time-to-value."
+      },
+      {
+        "rank": 3,
+        "productId": "ms-power-bi",
+        "productName": "Microsoft Power BI",
+        "vendor": "Microsoft",
+        "category": "Analytics",
+        "totalScore": 91.55,
+        "costSubScore": 92,
+        "securitySubScore": 91,
+        "scalabilitySubScore": 92,
+        "integrationSubScore": 91,
+        "featuresSubScore": 92,
+        "reason": "Strong alignment on top-priority criterion Security (30% weight) with an outstanding rating of 91/100. Requires additional security controls to meet High Data Sensitivity standard. Proven multi-tenant elasticity accommodates 500+ users and expected annual expansion. Advantage: Low migration complexity accelerates time-to-value."
+      },
+      {
+        "rank": 4,
+        "productId": "servicenow-itsm",
+        "productName": "ServiceNow IT Service Management",
+        "vendor": "ServiceNow",
+        "category": "ITSM",
+        "totalScore": 90.9,
+        "costSubScore": 74,
+        "securitySubScore": 95,
+        "scalabilitySubScore": 96,
+        "integrationSubScore": 94,
+        "featuresSubScore": 95,
+        "reason": "Strong alignment on top-priority criterion Security (30% weight) with an outstanding rating of 95/100. Matches High Data Sensitivity mandate with enterprise-grade certifications (FedRAMP / SOC 1-2 / ISO 27001 / DoD IL4). Proven multi-tenant elasticity accommodates 500+ users and expected annual expansion."
+      },
+      {
+        "rank": 5,
+        "productId": "sap-cloud-erp",
+        "productName": "SAP S/4HANA Cloud",
+        "vendor": "SAP",
+        "category": "ERP",
+        "totalScore": 90.35,
+        "costSubScore": 65,
+        "securitySubScore": 96,
+        "scalabilitySubScore": 98,
+        "integrationSubScore": 95,
+        "featuresSubScore": 98,
+        "reason": "Strong alignment on top-priority criterion Security (30% weight) with an outstanding rating of 96/100. Matches High Data Sensitivity mandate with enterprise-grade certifications (ISO 27001 / SOC 1-2 / C5 / BSI). Proven multi-tenant elasticity accommodates 500+ users and expected annual expansion. Note: Involves high migration complexity; phased pilot testing recommended."
+      },
+      {
+        "rank": 6,
+        "productId": "salesforce-crm",
+        "productName": "Salesforce Sales Cloud",
+        "vendor": "Salesforce",
+        "category": "CRM",
+        "totalScore": 88.95,
+        "costSubScore": 68,
+        "securitySubScore": 94,
+        "scalabilitySubScore": 95,
+        "integrationSubScore": 92,
+        "featuresSubScore": 96,
+        "reason": "Strong alignment on top-priority criterion Security (30% weight) with an outstanding rating of 94/100. Matches High Data Sensitivity mandate with enterprise-grade certifications (SOC2 Type II / ISO 27001 / FedRAMP High). Proven multi-tenant elasticity accommodates 500+ users and expected annual expansion."
+      },
+      {
+        "rank": 7,
+        "productId": "workday-hcm",
+        "productName": "Workday HCM",
+        "vendor": "Workday",
+        "category": "HCM",
+        "totalScore": 88.95,
+        "costSubScore": 75,
+        "securitySubScore": 95,
+        "scalabilitySubScore": 92,
+        "integrationSubScore": 87,
+        "featuresSubScore": 94,
+        "reason": "Strong alignment on top-priority criterion Security (30% weight) with an outstanding rating of 95/100. Matches High Data Sensitivity mandate with enterprise-grade certifications (SOC 1-3 / ISO 27001 / CSA STAR). Proven multi-tenant elasticity accommodates 500+ users and expected annual expansion."
+      },
+      {
+        "rank": 8,
+        "productId": "ms-dynamics-365",
+        "productName": "Microsoft Dynamics 365",
+        "vendor": "Microsoft",
+        "category": "CRM",
+        "totalScore": 88.3,
+        "costSubScore": 78,
+        "securitySubScore": 92,
+        "scalabilitySubScore": 90,
+        "integrationSubScore": 90,
+        "featuresSubScore": 91,
+        "reason": "Strong alignment on top-priority criterion Security (30% weight) with an outstanding rating of 92/100. Matches High Data Sensitivity mandate with enterprise-grade certifications (FedRAMP / ISO 27001 / HIPAA / SOC 1-3). Proven multi-tenant elasticity accommodates 500+ users and expected annual expansion."
+      },
+      {
+        "rank": 9,
+        "productId": "jira-cloud",
+        "productName": "Atlassian Jira Software",
+        "vendor": "Atlassian",
+        "category": "Productivity",
+        "totalScore": 88.05,
+        "costSubScore": 90,
+        "securitySubScore": 88,
+        "scalabilitySubScore": 86,
+        "integrationSubScore": 89,
+        "featuresSubScore": 88,
+        "reason": "Satisfactory performance on key priority Security (30% weight) scoring 88/100. Requires additional security controls to meet High Data Sensitivity standard. Advantage: Low migration complexity accelerates time-to-value."
+      },
+      {
+        "rank": 10,
+        "productId": "oracle-fusion-erp",
+        "productName": "Oracle Fusion Cloud ERP",
+        "vendor": "Oracle",
+        "category": "ERP",
+        "totalScore": 87.9,
+        "costSubScore": 70,
+        "securitySubScore": 93,
+        "scalabilitySubScore": 94,
+        "integrationSubScore": 88,
+        "featuresSubScore": 93,
+        "reason": "Strong alignment on top-priority criterion Security (30% weight) with an outstanding rating of 93/100. Matches High Data Sensitivity mandate with enterprise-grade certifications (FedRAMP / ISO 27001 / SOC 2 / HIPAA). Proven multi-tenant elasticity accommodates 500+ users and expected annual expansion. Note: Involves high migration complexity; phased pilot testing recommended."
+      }
+    ]
+  },
+  "comp-fixture-fintech-agile": {
+    "companyName": "Apex FinTech Solutions",
+    "targetCategory": "CRM",
+    "weightsUsed": {
+      "cost": 15,
+      "security": 35,
+      "scalability": 25,
+      "integration": 15,
+      "features": 10
+    },
+    "note": "computed by the existing CAP engine, not independently validated",
+    "results": [
+      {
+        "rank": 1,
+        "productId": "salesforce-crm",
+        "productName": "Salesforce Sales Cloud",
+        "vendor": "Salesforce",
+        "category": "CRM",
+        "totalScore": 90.25,
+        "costSubScore": 68,
+        "securitySubScore": 94,
+        "scalabilitySubScore": 95,
+        "integrationSubScore": 92,
+        "featuresSubScore": 96,
+        "reason": "Strong alignment on top-priority criterion Security (35% weight) with an outstanding rating of 94/100. Matches High Data Sensitivity mandate with enterprise-grade certifications (SOC2 Type II / ISO 27001 / FedRAMP High). Proven multi-tenant elasticity accommodates 500+ users and expected annual expansion."
+      },
+      {
+        "rank": 2,
+        "productId": "ms-dynamics-365",
+        "productName": "Microsoft Dynamics 365",
+        "vendor": "Microsoft",
+        "category": "CRM",
+        "totalScore": 89,
+        "costSubScore": 78,
+        "securitySubScore": 92,
+        "scalabilitySubScore": 90,
+        "integrationSubScore": 90,
+        "featuresSubScore": 91,
+        "reason": "Strong alignment on top-priority criterion Security (35% weight) with an outstanding rating of 92/100. Matches High Data Sensitivity mandate with enterprise-grade certifications (FedRAMP / ISO 27001 / HIPAA / SOC 1-3). Proven multi-tenant elasticity accommodates 500+ users and expected annual expansion."
+      }
+    ]
+  },
+  "comp-fixture-midmarket-retail": {
+    "companyName": "Crestview Retailers",
+    "targetCategory": "ERP",
+    "weightsUsed": {
+      "cost": 35,
+      "security": 20,
+      "scalability": 15,
+      "integration": 20,
+      "features": 10
+    },
+    "note": "computed by the existing CAP engine, not independently validated",
+    "results": [
+      {
+        "rank": 1,
+        "productId": "sap-cloud-erp",
+        "productName": "SAP S/4HANA Cloud",
+        "vendor": "SAP",
+        "category": "ERP",
+        "totalScore": 85.45,
+        "costSubScore": 65,
+        "securitySubScore": 96,
+        "scalabilitySubScore": 98,
+        "integrationSubScore": 95,
+        "featuresSubScore": 98,
+        "reason": "Moderate fit on priority Cost (35% weight) scoring 65/100. Note: Involves high migration complexity; phased pilot testing recommended."
+      },
+      {
+        "rank": 2,
+        "productId": "oracle-fusion-erp",
+        "productName": "Oracle Fusion Cloud ERP",
+        "vendor": "Oracle",
+        "category": "ERP",
+        "totalScore": 84.1,
+        "costSubScore": 70,
+        "securitySubScore": 93,
+        "scalabilitySubScore": 94,
+        "integrationSubScore": 88,
+        "featuresSubScore": 93,
+        "reason": "Moderate fit on priority Cost (35% weight) scoring 70/100. Note: Involves high migration complexity; phased pilot testing recommended."
+      }
+    ]
+  }
+}
