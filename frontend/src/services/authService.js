@@ -131,7 +131,19 @@ export const authService = {
         throw new Error(error.message);
       }
       if (data?.user) {
-        const user = normalizeUser(data.user);
+        let profile = null;
+        try {
+          const { data: prof } = await supabase
+            .from('profiles').select('*').eq('id', data.user.id).maybeSingle();
+          profile = prof;
+        } catch {
+          // ignore profile fetch fallback
+        }
+        const user = normalizeUser(data.user, profile ? {
+          full_name: profile.full_name,
+          role: profile.role,
+          company_id: profile.company_id
+        } : undefined);
         if (typeof window !== 'undefined') {
           localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
           window.dispatchEvent(new CustomEvent('saas:role_changed', { detail: user }));
