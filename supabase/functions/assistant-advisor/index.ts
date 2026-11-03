@@ -4,6 +4,12 @@
 // Ported from: srv/lib/assistant.js
 // ==============================================================================
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 export function answerQuestionDeterministic(question: string, context: any = {}) {
   const q = (question || '').toLowerCase().trim();
   const assessment = context.assessment || {};
@@ -31,11 +37,11 @@ export function answerQuestionDeterministic(question: string, context: any = {})
     if (topProduct) {
       return {
         answer: `**${topProduct.productName}** holds Rank #1 with an overall weighted score of **${topProduct.totalScore}/100**.\n\n` +
-          `• **Cost Fit**: ${topProduct.costSubScore}/100\n` +
-          `• **Security**: ${topProduct.securitySubScore}/100\n` +
-          `• **Scalability**: ${topProduct.scalabilitySubScore}/100\n` +
-          `• **Integration**: ${topProduct.integrationSubScore}/100\n` +
-          `• **Features**: ${topProduct.featuresSubScore}/100\n\n` +
+          `• **Cost Fit**: ${topProduct.costSubScore ?? topProduct.cost_sub_score}/100\n` +
+          `• **Security**: ${topProduct.securitySubScore ?? topProduct.security_sub_score}/100\n` +
+          `• **Scalability**: ${topProduct.scalabilitySubScore ?? topProduct.scalability_sub_score}/100\n` +
+          `• **Integration**: ${topProduct.integrationSubScore ?? topProduct.integration_sub_score}/100\n` +
+          `• **Features**: ${topProduct.featuresSubScore ?? topProduct.features_sub_score}/100\n\n` +
           `**Decision Rationale**: ${topProduct.reason}\n\n` +
           `*Note: As an advisory assistant, I present and explain the engine's objective mathematical rankings based on your configured weights.*`,
         category: 'Scoring Rationale'
@@ -51,20 +57,20 @@ export function answerQuestionDeterministic(question: string, context: any = {})
     const criticalRisks = (risks || []).filter((r: any) => r.severity === 'Critical' || r.severity === 'High');
     let riskList = "";
     if (criticalRisks.length > 0) {
-      riskList = criticalRisks.map((r: any) => `• **${r.riskTitle}** (Score: ${r.score}/25, ${r.severity})\n  *Mitigation*: ${r.mitigation}`).join('\n\n');
+      riskList = criticalRisks.map((r: any) => `• **${r.riskTitle || r.risk_title}** (Score: ${r.score}/25, ${r.severity})\n  *Mitigation*: ${r.mitigation}`).join('\n\n');
     } else {
       riskList = "All evaluated risks currently reside within Moderate or Low severity bounds.";
     }
 
     return {
-      answer: `Based on your enterprise parameters (Infrastructure: **${assessment.infrastructure || 'On-premise'}**, Data Sensitivity: **${assessment.dataSensitivity || 'High'}**), here is your risk profile:\n\n${riskList}\n\n**Guidance**: Focus pilot testing on data schema reconciliation and implement parallel dual-runs before decommissioning legacy systems.`,
+      answer: `Based on your enterprise parameters (Infrastructure: **${assessment.infrastructure || 'On-premise'}**, Data Sensitivity: **${assessment.dataSensitivity || assessment.data_sensitivity || 'High'}**), here is your risk profile:\n\n${riskList}\n\n**Guidance**: Focus pilot testing on data schema reconciliation and implement parallel dual-runs before decommissioning legacy systems.`,
       category: 'Risk Analysis'
     };
   }
 
   if (q.includes('plan') || q.includes('roadmap') || q.includes('phase') || q.includes('timeline') || q.includes('duration')) {
-    const totalDuration = plan.estimatedDurationMonths || 12;
-    const progress = plan.overallProgress !== undefined ? plan.overallProgress : 32.5;
+    const totalDuration = plan.estimatedDurationMonths || plan.estimated_duration_months || 12;
+    const progress = plan.overallProgress !== undefined ? plan.overallProgress : (plan.overall_progress !== undefined ? plan.overall_progress : 32.5);
     return {
       answer: `Your transformation is structured into an **8-Phase Roadmap** spanning **${totalDuration} months** with current progress at **${progress}%**:\n\n` +
         `1. **Assessment & Strategy**: TCO baseline & governance\n` +
@@ -80,135 +86,138 @@ export function answerQuestionDeterministic(question: string, context: any = {})
     };
   }
 
-  if (q.includes('readiness') || q.includes('toe')) {
-    const readiness = assessment.readinessScore || 78.5;
+  if (q.includes('toe') || q.includes('readiness') || q.includes('framework')) {
     return {
-      answer: `Your **TOE Readiness Score is ${readiness}/100**.\n\n` +
-        `• **Technology**: ${assessment.toeTechScore || 72.0}/100 — reflects legacy infrastructure footprint and technical debt.\n` +
-        `• **Organisation**: ${assessment.toeOrgScore || 80.0}/100 — evaluated from IT budget adequacy ($${(assessment.itBudget || 1500000).toLocaleString()}) and workforce scale.\n` +
-        `• **Environment**: ${assessment.toeEnvScore || 85.0}/100 — driven by expected market expansion rate (${assessment.growthRate || 18}%) and compliance standards.\n\n` +
-        `An overall score above 75 indicates a ready enterprise profile prepared for cloud SaaS adoption.`,
-      category: 'Readiness Diagnosis'
-    };
-  }
-
-  if (q.includes('cost') || q.includes('budget') || q.includes('cfo') || q.includes('pitch')) {
-    return {
-      answer: `**Executive Summary for CFO & Leadership**:\n\n` +
-        `• **Capital Allocation**: Current annual IT budget is $${(assessment.itBudget || 1500000).toLocaleString()} across ${assessment.employees || 1000} users.\n` +
-        `• **Target TCO Benefits**: Shifting from monolithic on-premise infrastructure reduces server maintenance by up to 35% and improves deployment agility by 4x.\n` +
-        `• **Recommendation**: Proceed with ${topProduct ? topProduct.productName : 'recommended SaaS solution'} on a phased 12-month timeline to maintain cost predictability and preserve business continuity.`,
-      category: 'Business Case'
+      answer: `The platform evaluates transformation readiness across three **TOE (Technology-Organization-Environment)** pillars:\n\n` +
+        `• **Technological Readiness (${assessment.toeTechScore ?? assessment.toe_tech_score ?? 78}/100)**: Cloud maturity, legacy application complexity, and data integration capability.\n` +
+        `• **Organizational Readiness (${assessment.toeOrgScore ?? assessment.toe_org_score ?? 68}/100)**: Executive sponsorship, change management capacity, and digital workforce skills.\n` +
+        `• **Environmental Readiness (${assessment.toeEnvScore ?? assessment.toe_env_score ?? 74}/100)**: Industry competitive pressure, regulatory compliance compliance rigor, and vendor SLA maturity.\n\n` +
+        `Overall Composite Readiness Score: **${assessment.readinessScore ?? assessment.readiness_score ?? 72.5}/100** (Ready for phased migration).`,
+      category: 'TOE Framework'
     };
   }
 
   return {
-    answer: `Regarding "${question}": In the context of your transformation assessment for ${assessment.companyName || 'your organization'}, we recommend balancing speed of migration with zero-downtime cutover procedures. You can review specific evaluation breakdowns in the Recommendation tab or inspect migration phases in the Roadmap Planner.`,
-    category: 'General Advisory'
+    answer: `Regarding "${question}":\n\nIn our evaluated portfolio for **${assessment.companyName || 'your enterprise'}**, the primary migration objective is balancing cloud modernization agility against business continuity risk. For critical enterprise functions, we recommend prioritizing modular SaaS adoption with active API mediation and automated fallback controls.`,
+    category: 'Advisory Guidance'
   };
 }
 
-export default async function handler(req: Request) {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-      }
-    });
-  }
+// @ts-ignore: Deno runtime
+if (typeof Deno !== 'undefined' && Deno.serve) {
+  // @ts-ignore: Deno runtime
+  Deno.serve(async (req: Request) => {
+    // 1. Immediate synchronous CORS OPTIONS preflight response
+    if (req.method === 'OPTIONS') {
+      return new Response('ok', { headers: corsHeaders });
+    }
 
-  try {
-    const { question, context = {} } = await req.json();
+    try {
+      const { question, context = {} } = await req.json();
 
-    // Check for OpenAI or Gemini API key stored in Supabase secrets
-    // @ts-ignore: Deno global
-    const openAiKey = Deno.env?.get('OPENAI_API_KEY');
-    // @ts-ignore: Deno global
-    const geminiKey = Deno.env?.get('GEMINI_API_KEY');
+      // Check for OpenAI, Gemini, or generic LLM API key stored in Supabase secrets
+      // @ts-ignore: Deno global
+      const llmKey = Deno.env?.get('LLM_API_KEY') || Deno.env?.get('OPENAI_API_KEY') || Deno.env?.get('GEMINI_API_KEY');
+      // @ts-ignore: Deno global
+      const llmProvider = (Deno.env?.get('LLM_PROVIDER') || 'openai').toLowerCase();
+      // @ts-ignore: Deno global
+      const llmModel = Deno.env?.get('LLM_MODEL') || (llmProvider.includes('gemini') ? 'gemini-1.5-flash' : 'gpt-4o-mini');
 
-    if (openAiKey) {
-      try {
-        const sysPrompt = `You are the Enterprise SaaS Transformation AI Advisor for a cloud migration decision-support platform.
+      if (llmKey && llmProvider.includes('gemini')) {
+        try {
+          const prompt = `You are the Enterprise SaaS Transformation AI Advisor for a cloud migration decision-support platform. 
+Question: ${question}
+Context: ${JSON.stringify(context)}
+Design rule: The deterministic scoring engine has already decided the ranking. You explain the results and offer advice; you never change the scores.`;
+
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${llmModel}:generateContent?key=${llmKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            const answer = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (answer) {
+              return new Response(JSON.stringify({
+                answer,
+                category: 'AI Synthesis (Gemini)',
+                model: llmModel
+              }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+              });
+            }
+          }
+        } catch {
+          // Fallback to deterministic advisor
+        }
+      } else if (llmKey) {
+        try {
+          const sysPrompt = `You are the Enterprise SaaS Transformation AI Advisor for a cloud migration decision-support platform.
 Context:
 - Company: ${context.assessment?.companyName || 'Enterprise'}
 - Infrastructure: ${context.assessment?.infrastructure || 'Hybrid'}
 - Data Sensitivity: ${context.assessment?.dataSensitivity || 'High'}
 - Top Product: ${context.results?.[0]?.productName || 'None evaluated'}
 - Identified Risks: ${(context.risks || []).length} risks found.
-Answer professionally, concisely, and cite mathematical fit scores and risk mitigations when relevant.`;
+Design rule: The deterministic scoring engine decides the ranking; you explain results and provide strategic advice; you must never change scores.`;
 
-        const res = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${openAiKey}`
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              { role: 'system', content: sysPrompt },
-              { role: 'user', content: question }
-            ],
-            temperature: 0.3
-          })
-        });
+          const res = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${llmKey}`
+            },
+            body: JSON.stringify({
+              model: llmModel,
+              messages: [
+                { role: 'system', content: sysPrompt },
+                { role: 'user', content: question }
+              ],
+              temperature: 0.3
+            })
+          });
 
-        if (res.ok) {
-          const completion = await res.json();
-          const answer = completion.choices?.[0]?.message?.content;
-          if (answer) {
-            return new Response(JSON.stringify({
-              answer,
-              category: 'AI Synthesis (LLM)',
-              model: 'gpt-4o-mini'
-            }), {
-              headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-            });
+          if (res.ok) {
+            const completion = await res.json();
+            const answer = completion.choices?.[0]?.message?.content;
+            if (answer) {
+              return new Response(JSON.stringify({
+                answer,
+                category: 'AI Synthesis (LLM)',
+                model: llmModel
+              }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+              });
+            }
           }
+        } catch {
+          // Fallback to deterministic advisor
         }
-      } catch {
-        // Fallback to deterministic advisor
       }
-    } else if (geminiKey) {
-      try {
-        const prompt = `You are the Enterprise SaaS Transformation AI Advisor. Question: ${question}. Context: ${JSON.stringify(context)}`;
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
-          })
-        });
 
-        if (res.ok) {
-          const data = await res.json();
-          const answer = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (answer) {
-            return new Response(JSON.stringify({
-              answer,
-              category: 'AI Synthesis (Gemini)',
-              model: 'gemini-1.5-flash'
-            }), {
-              headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-            });
-          }
-        }
-      } catch {
-        // Fallback to deterministic advisor
-      }
+      // Deterministic intelligence fallback
+      const result = answerQuestionDeterministic(question, context);
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    } catch (err: any) {
+      return new Response(JSON.stringify({ error: err.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
-
-    // Deterministic intelligence fallback
-    const result = answerQuestionDeterministic(question, context);
-    return new Response(JSON.stringify(result), {
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
-  } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
-  }
+  });
 }
 
+export default async function handler(req: Request) {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+  const { question, context = {} } = await req.json();
+  const result = answerQuestionDeterministic(question, context);
+  return new Response(JSON.stringify(result), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+  });
+}

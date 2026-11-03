@@ -30,6 +30,26 @@ CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
 -- 2. Auth Helper Functions (SECURITY DEFINER for safe RLS evaluation)
 -- ==============================================================================
 
+CREATE OR REPLACE FUNCTION public.current_role()
+RETURNS TEXT
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+    SELECT public.get_auth_role();
+$$;
+
+CREATE OR REPLACE FUNCTION public.current_company_id()
+RETURNS TEXT
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+    SELECT public.get_auth_company_id();
+$$;
+
 -- 2.1 Get Current User Role (Normalized to lowercase)
 CREATE OR REPLACE FUNCTION public.get_auth_role()
 RETURNS TEXT
@@ -95,7 +115,7 @@ DECLARE
     v_full_name TEXT;
     v_username TEXT;
 BEGIN
-    v_role := COALESCE(NEW.raw_user_meta_data->>'role', 'viewer');
+    v_role TEXT := 'viewer'; -- Security Guard: Always default to viewer on signup
     v_company := COALESCE(NEW.raw_user_meta_data->>'company_id', 'comp-apex-global');
     v_full_name := COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1));
     v_username := COALESCE(NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1));
@@ -112,7 +132,7 @@ BEGIN
     ON CONFLICT (id) DO UPDATE SET
         full_name = EXCLUDED.full_name,
         email = EXCLUDED.email,
-        role = EXCLUDED.role,
+        -- role is preserved, not overwritten by client metadata on conflict
         company_id = EXCLUDED.company_id,
         modified_at = clock_timestamp();
 

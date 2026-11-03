@@ -1,0 +1,68 @@
+[
+  {
+    "id": "comp-fixture-global-corp",
+    "name": "Global Logistics Enterprise",
+    "industry": "Transportation & Logistics",
+    "employees": 3500,
+    "itBudget": 4500000,
+    "region": "North America",
+    "assessment": {
+      "targetCategory": "All",
+      "infrastructure": "On-premise",
+      "dataSensitivity": "High",
+      "growthRate": 15
+    },
+    "weights": {
+      "cost": 20,
+      "security": 30,
+      "scalability": 25,
+      "integration": 15,
+      "features": 10
+    },
+    "note": "computed by the existing CAP engine, not independently validated"
+  },
+  {
+    "id": "comp-fixture-fintech-agile",
+    "name": "Apex FinTech Solutions",
+    "industry": "Financial Services",
+    "employees": 600,
+    "itBudget": 1200000,
+    "region": "EMEA",
+    "assessment": {
+      "targetCategory": "CRM",
+      "infrastructure": "Hybrid",
+      "dataSensitivity": "High",
+      "growthRate": 25
+    },
+    "weights": {
+      "cost": 15,
+      "security": 35,
+      "scalability": 25,
+      "integration": 15,
+      "features": 10
+    },
+    "note": "computed by the existing CAP engine, not independently validated"
+  },
+  {
+    "id": "comp-fixture-midmarket-retail",
+    "name": "Crestview Retailers",
+    "industry": "Retail & Consumer Goods",
+    "employees": 250,
+    "itBudget": 350000,
+    "region": "Asia-Pacific",
+    "assessment": {
+      "targetCategory": "ERP",
+      "infrastructure": "On-premise",
+      "dataSensitivity": "Medium",
+      "growthRate": 10
+    },
+    "weights": {
+      "cost": 35,
+      "security": 20,
+      "scalability": 15,
+      "integration": 20,
+      "features": 10
+    },
+    "note": "computed by the existing CAP engine, not independently validated"
+  }
+]

@@ -38,7 +38,7 @@ export const riskService = {
 
   async assessRisks(assessmentId = 'assessment-ref-case') {
     const templates = await this.getTemplates();
-    const assessment = await assessmentService.getAssessmentById(assessmentId);
+    const assessment = (await assessmentService.getAssessmentById(assessmentId)) || {};
     const assessmentContext = {
       ...assessment,
       legacyAppsCount: (assessment.legacyApplications || []).length

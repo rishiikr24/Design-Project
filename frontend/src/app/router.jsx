@@ -12,11 +12,17 @@ import { PlannerPage } from '../features/planner/PlannerPage';
 import { AssistantPage } from '../features/assistant/AssistantPage';
 import { CompanyPage } from '../features/company/CompanyPage';
 import { AuthPage } from '../features/auth/AuthPage';
+import { HealthPage } from '../features/health/HealthPage';
 
 export const router = createBrowserRouter([
   {
     path: '/login',
     element: <AuthPage />
+  },
+  // Dev-only: unauthenticated connectivity check
+  {
+    path: '/health',
+    element: <HealthPage />
   },
   {
     path: '/',

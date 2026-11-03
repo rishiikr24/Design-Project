@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, shouldUseMocks } from '../lib/supabase';
 import initialUsers from '../data/users.json';
 
 const CURRENT_USER_KEY = 'saas_current_user';
@@ -47,7 +47,7 @@ function normalizeUser(rawUser, metadata = {}) {
 
 export const authService = {
   isSupabaseEnabled() {
-    return isSupabaseConfigured;
+    return !shouldUseMocks();
   },
 
   getRoles() {
@@ -55,7 +55,7 @@ export const authService = {
   },
 
   async getUsers() {
-    if (isSupabaseConfigured) {
+    if (!shouldUseMocks()) {
       try {
         const { data, error } = await supabase
           .from('profiles')
@@ -79,16 +79,13 @@ export const authService = {
   },
 
   async getCurrentUser() {
-    if (isSupabaseConfigured) {
+    if (!shouldUseMocks()) {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           // Fetch profile details
           const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
+            .from('profiles').select('*').eq('id', user.id).maybeSingle();
 
           const normalized = normalizeUser(user, profile ? {
             full_name: profile.full_name,
@@ -125,7 +122,7 @@ export const authService = {
       throw new Error('Email is required');
     }
 
-    if (isSupabaseConfigured && password) {
+    if (!shouldUseMocks() && Boolean(password)) {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -170,7 +167,7 @@ export const authService = {
       throw new Error(`User with email ${email} already exists`);
     }
 
-    if (isSupabaseConfigured) {
+    if (!shouldUseMocks()) {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -261,7 +258,7 @@ export const authService = {
   },
 
   async logout() {
-    if (isSupabaseConfigured) {
+    if (!shouldUseMocks()) {
       try {
         await supabase.auth.signOut();
       } catch {
@@ -276,7 +273,7 @@ export const authService = {
   },
 
   onAuthStateChange(callback) {
-    if (isSupabaseConfigured) {
+    if (!shouldUseMocks()) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
         const user = session?.user ? normalizeUser(session.user) : null;
         callback(event, user);

@@ -79,13 +79,14 @@ export const assessmentService = {
           .from('assessments')
           .select('*, legacy_applications(*), requirements(*)')
           .eq('id', id)
-          .single();
+          .maybeSingle();
 
         if (!error && data) {
           return mapAssessmentFromPostgres(data, data.legacy_applications || [], data.requirements || []);
         }
+        return null;
       } catch {
-        // Fallback to local
+        return null;
       }
     }
 

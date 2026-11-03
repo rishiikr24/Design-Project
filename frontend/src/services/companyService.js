@@ -70,10 +70,7 @@ export const companyService = {
     if (!shouldUseMocks()) {
       try {
         const { data, error } = await supabase
-          .from('companies')
-          .select('*')
-          .eq('id', id)
-          .single();
+          .from('companies').select('*').eq('id', id).maybeSingle();
 
         if (!error && data) {
           const users = await authService.getUsers();
