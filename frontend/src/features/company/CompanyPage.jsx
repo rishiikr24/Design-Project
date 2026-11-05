@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Building2, Users, Edit3, UserPlus, Shield, Check, X } from 'lucide-react';
+import { Building2, Users, Edit3, Plus, UserPlus, Check, X, FileText, ChevronRight, Activity } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '../../components/Card';
 import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
@@ -14,14 +14,26 @@ export function CompanyPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  
+  // Modals & Active Selections
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [companyAssessments, setCompanyAssessments] = useState([]);
+  const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState(null);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const { showToast } = useToast();
 
+  const [newCompanyForm, setNewCompanyForm] = useState({
+    name: '',
+    industry: 'Technology & Cloud',
+    employees: 250,
+    itBudget: 750000,
+    region: 'North America'
+  });
+
   const [inviteForm, setInviteForm] = useState({
     fullName: '',
     email: '',
-    role: 'Viewer',
     company_ID: 'comp-apex-global'
   });
 
@@ -33,9 +45,16 @@ export function CompanyPage() {
       setData(res);
       const user = await authService.getCurrentUser();
       setCurrentUser(user);
+
+      if (res.companies && res.companies.length > 0) {
+        const primary = res.companies[0];
+        setSelectedCompany(primary);
+        const history = await companyService.getCompanyAssessments(primary.ID || primary.id);
+        setCompanyAssessments(history);
+      }
     } catch (err) {
       setError(err.message || 'Error loading tenant profiles');
-      showToast(`Error loading tenant profiles: ${err.message}`, 'danger');
+      showToast(`Error loading organization data: ${err.message}`, 'danger');
     } finally {
       setLoading(false);
     }
@@ -43,25 +62,26 @@ export function CompanyPage() {
 
   useEffect(() => {
     loadData();
-    const handleRoleChanged = (e) => {
+    const handleUserChanged = (e) => {
       if (e.detail) setCurrentUser(e.detail);
     };
-    window.addEventListener('saas:role_changed', handleRoleChanged);
-    return () => window.removeEventListener('saas:role_changed', handleRoleChanged);
+    window.addEventListener('saas:user_changed', handleUserChanged);
+    return () => window.removeEventListener('saas:user_changed', handleUserChanged);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleImpersonate = async (role) => {
+  const handleSelectCompany = async (company) => {
+    setSelectedCompany(company);
     try {
-      const updated = await authService.switchRole(role);
-      setCurrentUser(updated);
-      showToast(`Switched active profile role to: ${role}`, 'info');
-    } catch (err) {
-      showToast(`Role switch failed: ${err.message}`, 'danger');
+      const history = await companyService.getCompanyAssessments(company.ID || company.id);
+      setCompanyAssessments(history);
+    } catch {
+      setCompanyAssessments([]);
     }
   };
 
-  const handleOpenEditCompany = (company) => {
+  const handleOpenEditCompany = (company, e) => {
+    if (e) e.stopPropagation();
     setEditingCompany({ ...company });
   };
 
@@ -69,12 +89,35 @@ export function CompanyPage() {
     e.preventDefault();
     if (!editingCompany) return;
     try {
-      await companyService.updateCompany(editingCompany.ID, editingCompany);
+      await companyService.updateCompany(editingCompany.ID || editingCompany.id, editingCompany);
       showToast(`Updated organization ${editingCompany.name}`, 'success');
       setEditingCompany(null);
       loadData();
     } catch (err) {
       showToast(`Error updating company: ${err.message}`, 'danger');
+    }
+  };
+
+  const handleCreateCompany = async (e) => {
+    e.preventDefault();
+    if (!newCompanyForm.name.trim()) {
+      showToast('Please provide a company name', 'warning');
+      return;
+    }
+    try {
+      const created = await companyService.createCompany(newCompanyForm);
+      showToast(`Created organization ${created.name}`, 'success');
+      setIsCreateCompanyModalOpen(false);
+      setNewCompanyForm({
+        name: '',
+        industry: 'Technology & Cloud',
+        employees: 250,
+        itBudget: 750000,
+        region: 'North America'
+      });
+      loadData();
+    } catch (err) {
+      showToast(`Failed to create company: ${err.message}`, 'danger');
     }
   };
 
@@ -86,358 +129,491 @@ export function CompanyPage() {
     }
     try {
       await authService.addUser(inviteForm);
-      showToast(`Added ${inviteForm.fullName} (${inviteForm.role})`, 'success');
+      showToast(`Associated ${inviteForm.fullName} with company`, 'success');
       setIsInviteModalOpen(false);
-      setInviteForm({ fullName: '', email: '', role: 'Viewer', company_ID: 'comp-apex-global' });
+      setInviteForm({ fullName: '', email: '', company_ID: selectedCompany?.ID || 'comp-apex-global' });
       loadData();
     } catch (err) {
-      showToast(`Failed to add user: ${err.message}`, 'danger');
+      showToast(`Failed to associate user: ${err.message}`, 'danger');
     }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#247C78]"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-md mx-auto my-16 p-6 rounded-2xl bg-red-950/40 border border-red-500/40 text-center space-y-4">
-        <h3 className="text-base font-bold text-white">Error Loading Tenant Data</h3>
-        <p className="text-xs text-red-300">{error}</p>
+      <div className="max-w-md mx-auto my-16 p-6 rounded-2xl bg-white border border-red-200 text-center space-y-4 shadow-sm">
+        <h3 className="text-base font-bold text-[#102B46]">Error Loading Organizations</h3>
+        <p className="text-xs text-red-600">{error}</p>
         <Button variant="primary" size="sm" onClick={loadData}>
-          Retry Connection
+          Retry
         </Button>
       </div>
     );
   }
 
-  if (!data || !data.companies || data.companies.length === 0) {
-    return (
-      <div className="max-w-md mx-auto my-16 p-6 rounded-2xl bg-slate-900 border border-slate-800 text-center space-y-4">
-        <h3 className="text-base font-bold text-white">No Organizations Registered</h3>
-        <p className="text-xs text-slate-400">Initialize default tenant profiles to begin.</p>
-        <Button variant="primary" size="sm" onClick={loadData}>
-          Load Tenants
-        </Button>
-      </div>
-    );
-  }
+  const activeCompanyUsers = data.users.filter(
+    u => u.company_ID === (selectedCompany?.ID || selectedCompany?.id) ||
+         u.company_id === (selectedCompany?.ID || selectedCompany?.id)
+  );
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Notice Banner */}
-      <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between text-xs">
-        <div className="flex items-center gap-2">
-          <Badge variant="warning">New, not ported</Badge>
-          <span className="text-amber-200">
-            <strong>Module 1: User & Admin Management:</strong> The legacy repo only had a simulated role switcher in the shell bar. This complete tenant & user profile administration interface is newly constructed with a mocked data service.
-          </span>
-        </div>
-      </div>
-
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-800">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* Page Title & Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#DCE5EA]">
         <div>
-          <h2 className="text-xl font-bold text-white tracking-tight">Organization & User Profile Management</h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Multi-tenant enterprise metadata and role-based access control (RBAC). Current active session: <strong className="text-blue-400 font-mono">{currentUser?.fullName} [{currentUser?.role}]</strong>
+          <div className="flex items-center gap-2 mb-1.5">
+            <h2 className="text-2xl font-bold text-[#102B46] tracking-tight">Organization Management</h2>
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#247C78]/10 text-[#247C78] border border-[#247C78]/20">
+              Module 1
+            </span>
+          </div>
+          <p className="text-sm text-[#718096]">
+            Manage enterprise information, company details and connected users.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outlineCyan" size="sm" onClick={() => setIsInviteModalOpen(true)}>
-            <UserPlus className="w-3.5 h-3.5" />
-            <span>Invite / Add User</span>
+        <div className="flex items-center gap-2.5">
+          <Button variant="outline" size="sm" onClick={() => setIsCreateCompanyModalOpen(true)}>
+            <Plus className="w-3.5 h-3.5 mr-1 text-[#247C78]" />
+            <span>Create Company</span>
+          </Button>
+          <Button variant="primary" size="sm" onClick={() => setIsInviteModalOpen(true)}>
+            <UserPlus className="w-3.5 h-3.5 mr-1" />
+            <span>Associate User</span>
           </Button>
         </div>
       </div>
 
-      {/* Organizations Grid */}
-      <div className="space-y-3">
-        <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
-          <Building2 className="w-4 h-4 text-blue-400" />
-          <span>Registered Tenant Organizations</span>
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {data.companies.map((c) => (
-            <Card key={c.ID} className="border-slate-700/80">
-              <CardHeader className="pb-3">
-                <div>
-                  <Badge variant="cyan">{c.industry}</Badge>
-                  <CardTitle className="mt-2 text-lg">{c.name}</CardTitle>
-                  <CardDescription>Region: {c.region}</CardDescription>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs text-slate-400 block">IT Budget</span>
-                  <span className="text-sm font-bold text-emerald-400">{formatCurrency(c.itBudget)}</span>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2 text-xs text-slate-300">
-                <div className="flex justify-between p-2.5 rounded-lg bg-slate-900 border border-slate-800">
-                  <span>Workforce Access Headcount:</span>
-                  <strong className="text-white">{c.employees.toLocaleString()} Employees</strong>
-                </div>
-                <div className="flex justify-between p-2.5 rounded-lg bg-slate-900 border border-slate-800">
-                  <span>Annual IT Budget Per Employee:</span>
-                  <strong className="text-blue-400">${Math.round(c.itBudget / c.employees).toLocaleString()}/emp</strong>
-                </div>
-              </CardContent>
-              <CardFooter className="pt-2 flex justify-end">
-                <Button variant="outline" size="sm" onClick={() => handleOpenEditCompany(c)}>
-                  <Edit3 className="w-3.5 h-3.5" />
-                  <span>Edit Profile</span>
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      {/* User Profiles & RBAC */}
-      <div className="space-y-3 pt-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
-            <Users className="w-4 h-4 text-cyan-400" />
-            <span>User Profiles & Role-Based Permissions (RBAC)</span>
+      {/* Main Grid: Companies (Left) and Details & History (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column: Registered Organizations List */}
+        <div className="space-y-4 lg:col-span-1">
+          <h3 className="text-sm font-bold text-[#102B46] tracking-tight flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <Building2 className="w-4 h-4 text-[#247C78]" />
+              Enterprise Companies
+            </span>
+            <span className="text-xs text-[#718096] font-normal">{data.companies.length} Registered</span>
           </h3>
-          <div className="flex items-center gap-1.5 text-xs text-slate-400">
-            <span>Quick switch role:</span>
-            {['Admin', 'Manager', 'Analyst', 'Viewer'].map((r) => (
-              <button
-                key={r}
-                onClick={() => handleImpersonate(r)}
-                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition ${
-                  currentUser?.role === r
-                    ? 'bg-blue-600 text-white ring-1 ring-blue-400'
-                    : 'bg-slate-800 text-slate-400 hover:text-white'
-                }`}
-              >
-                {r}
-              </button>
-            ))}
+
+          <div className="space-y-3">
+            {data.companies.map((c) => {
+              const isSelected = (selectedCompany?.ID || selectedCompany?.id) === (c.ID || c.id);
+              return (
+                <div
+                  key={c.ID || c.id}
+                  onClick={() => handleSelectCompany(c)}
+                  className={`p-4 rounded-2xl border transition cursor-pointer text-left ${
+                    isSelected
+                      ? 'bg-white border-[#247C78] shadow-sm ring-2 ring-[#247C78]/20'
+                      : 'bg-white border-[#DCE5EA] hover:border-[#247C78]/40 shadow-2xs'
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#F4F7FA] text-[#247C78] border border-[#DCE5EA]">
+                        {c.industry}
+                      </span>
+                      <h4 className="mt-1.5 text-base font-bold text-[#102B46]">{c.name}</h4>
+                      <p className="text-xs text-[#718096] mt-0.5">{c.region}</p>
+                    </div>
+                    <button
+                      onClick={(e) => handleOpenEditCompany(c, e)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-[#247C78] hover:bg-[#F4F7FA] transition"
+                      title="Edit Company Details"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="mt-3 pt-3 border-t border-[#DCE5EA] flex justify-between text-xs text-[#263746]">
+                    <div>
+                      <span className="text-[10px] text-[#718096] block">Employees</span>
+                      <strong className="font-semibold">{c.employees?.toLocaleString()}</strong>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] text-[#718096] block">Annual IT Budget</span>
+                      <strong className="font-semibold text-[#247C78]">{formatCurrency(c.itBudget)}</strong>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        <div className="overflow-x-auto border border-slate-800 rounded-xl bg-slate-900/60">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-800/80 text-slate-400 border-b border-slate-800">
-              <tr>
-                <th className="p-3">User</th>
-                <th className="p-3">Assigned Role</th>
-                <th className="p-3">Role Capabilities / Permissions</th>
-                <th className="p-3">Tenant</th>
-                <th className="p-3 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
-              {data.users.map((u) => {
-                const isCurrent = currentUser?.email?.toLowerCase() === u.email.toLowerCase() || currentUser?.role === u.role;
-                return (
-                  <tr key={u.ID || u.email} className={`hover:bg-slate-800/40 ${isCurrent ? 'bg-blue-950/20' : ''}`}>
-                    <td className="p-3">
-                      <div className="font-semibold text-white flex items-center gap-1.5">
-                        <span>{u.fullName}</span>
-                        {isCurrent && <span className="text-[10px] text-emerald-400 font-bold">(Active)</span>}
-                      </div>
-                      <div className="text-[11px] text-slate-400 font-mono">{u.email}</div>
-                    </td>
-                    <td className="p-3">
-                      <Badge
-                        variant={
-                          u.role === 'Admin'
-                            ? 'danger'
-                            : u.role === 'Manager'
-                            ? 'warning'
-                            : u.role === 'Analyst'
-                            ? 'primary'
-                            : 'neutral'
-                        }
-                      >
-                        {u.role}
-                      </Badge>
-                    </td>
-                    <td className="p-3 text-slate-300">
-                      {u.role === 'Admin' && <span className="text-red-300">Full platform control, Add SaaS products, User management</span>}
-                      {u.role === 'Manager' && <span className="text-amber-300">Assessment CRUD, Evaluation run, Roadmap progress updates</span>}
-                      {u.role === 'Analyst' && <span className="text-blue-300">View assessments, Run sensitivity simulations, Transformation AI</span>}
-                      {u.role === 'Viewer' && <span className="text-slate-400">Read-only platform inspection (mutations blocked)</span>}
-                    </td>
-                    <td className="p-3 text-slate-400 font-mono text-[11px]">
-                      {u.company_ID}
-                    </td>
-                    <td className="p-3 text-right">
-                      <Button
-                        variant={isCurrent ? 'ghost' : 'outline'}
-                        size="sm"
-                        onClick={() => handleImpersonate(u.role)}
-                        disabled={isCurrent}
-                      >
-                        {isCurrent ? 'Current' : 'Switch Role'}
-                      </Button>
-                    </td>
+        {/* Right Column: Active Company Deep View & Assessment History */}
+        <div className="space-y-6 lg:col-span-2">
+          {selectedCompany && (
+            <div className="bg-white border border-[#DCE5EA] rounded-2xl p-6 shadow-2xs space-y-5">
+              <div className="flex items-start justify-between pb-4 border-b border-[#DCE5EA]">
+                <div>
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#247C78]/10 text-[#247C78] border border-[#247C78]/20">
+                    {selectedCompany.industry}
+                  </span>
+                  <h3 className="text-xl font-bold text-[#102B46] mt-2">{selectedCompany.name}</h3>
+                  <p className="text-xs text-[#718096] mt-0.5">Headquarters & Jurisdiction: <strong>{selectedCompany.region}</strong></p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => handleOpenEditCompany(selectedCompany)}>
+                  <Edit3 className="w-3.5 h-3.5 mr-1.5" />
+                  <span>Edit Details</span>
+                </Button>
+              </div>
+
+              {/* 3 Metric Summary Tiles */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-3.5 rounded-xl bg-[#F4F7FA] border border-[#DCE5EA]">
+                  <span className="text-[11px] text-[#718096] uppercase font-bold">Total Workforce</span>
+                  <div className="text-xl font-bold text-[#102B46] mt-1">{selectedCompany.employees?.toLocaleString()}</div>
+                  <span className="text-[10px] text-[#718096]">Workforce headcount</span>
+                </div>
+                <div className="p-3.5 rounded-xl bg-[#F4F7FA] border border-[#DCE5EA]">
+                  <span className="text-[11px] text-[#718096] uppercase font-bold">Annual IT Budget</span>
+                  <div className="text-xl font-bold text-[#247C78] mt-1">{formatCurrency(selectedCompany.itBudget)}</div>
+                  <span className="text-[10px] text-[#718096]">Annual tech allocation</span>
+                </div>
+                <div className="p-3.5 rounded-xl bg-[#F4F7FA] border border-[#DCE5EA]">
+                  <span className="text-[11px] text-[#718096] uppercase font-bold">Budget / Employee</span>
+                  <div className="text-xl font-bold text-[#102B46] mt-1">
+                    ${selectedCompany.employees ? Math.round(selectedCompany.itBudget / selectedCompany.employees).toLocaleString() : 0}
+                  </div>
+                  <span className="text-[10px] text-[#718096]">Adoption capacity ratio</span>
+                </div>
+              </div>
+
+              {/* Company Assessment History */}
+              <div className="space-y-3 pt-2">
+                <h4 className="text-xs font-bold text-[#102B46] uppercase tracking-wider flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5 text-[#247C78]" />
+                  <span>Readiness Assessment History</span>
+                </h4>
+
+                <div className="border border-[#DCE5EA] rounded-xl overflow-hidden">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-[#F4F7FA] text-[#263746] font-semibold border-b border-[#DCE5EA]">
+                      <tr>
+                        <th className="p-3">Assessment Initiative</th>
+                        <th className="p-3">TOE Score</th>
+                        <th className="p-3">Status</th>
+                        <th className="p-3">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#DCE5EA]">
+                      {companyAssessments.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="p-4 text-center text-[#718096]">
+                            No assessments logged yet for this enterprise.
+                          </td>
+                        </tr>
+                      ) : (
+                        companyAssessments.map((a) => (
+                          <tr key={a.id} className="hover:bg-[#F4F7FA]/60 transition">
+                            <td className="p-3 font-semibold text-[#102B46]">{a.title}</td>
+                            <td className="p-3">
+                              <span className="font-bold text-[#247C78] bg-[#247C78]/10 px-2.5 py-0.5 rounded-full border border-[#247C78]/20">
+                                {a.readinessScore}/100
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                {a.status}
+                              </span>
+                            </td>
+                            <td className="p-3 text-[#718096]">
+                              {new Date(a.createdAt).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Connected User Accounts */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-[#102B46] tracking-tight flex items-center gap-1.5">
+                <Users className="w-4 h-4 text-[#247C78]" />
+                <span>Connected User Accounts</span>
+              </h3>
+              <Button variant="outline" size="sm" onClick={() => setIsInviteModalOpen(true)}>
+                <UserPlus className="w-3.5 h-3.5 mr-1" />
+                <span>Add User</span>
+              </Button>
+            </div>
+
+            <div className="overflow-x-auto border border-[#DCE5EA] rounded-2xl bg-white shadow-2xs">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#F4F7FA] text-[#263746] border-b border-[#DCE5EA] font-semibold">
+                  <tr>
+                    <th className="p-3.5">User Name</th>
+                    <th className="p-3.5">Email</th>
+                    <th className="p-3.5">Company Association</th>
+                    <th className="p-3.5">Status</th>
+                    <th className="p-3.5 text-right">Actions</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                </thead>
+                <tbody className="divide-y divide-[#DCE5EA]">
+                  {data.users.map((u) => {
+                    const isCurrent = currentUser?.email?.toLowerCase() === u.email?.toLowerCase();
+                    return (
+                      <tr key={u.ID || u.email} className={`hover:bg-[#F4F7FA]/70 transition ${isCurrent ? 'bg-[#247C78]/5' : ''}`}>
+                        <td className="p-3.5">
+                          <div className="font-bold text-[#102B46] flex items-center gap-1.5">
+                            <span>{u.fullName || u.email}</span>
+                            {isCurrent && <span className="text-[10px] text-[#247C78] font-bold">(You)</span>}
+                          </div>
+                        </td>
+                        <td className="p-3.5 text-[#718096] font-mono text-[11px]">{u.email}</td>
+                        <td className="p-3.5 text-[#263746] font-medium">
+                          {u.company_ID || u.company_id || 'Apex Global Enterprises'}
+                        </td>
+                        <td className="p-3.5">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            Active
+                          </span>
+                        </td>
+                        <td className="p-3.5 text-right">
+                          <span className="text-[11px] text-[#247C78] font-medium cursor-pointer hover:underline">
+                            Verified
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Modal: Create Company */}
+      <Modal
+        isOpen={isCreateCompanyModalOpen}
+        onClose={() => setIsCreateCompanyModalOpen(false)}
+        title="Create Enterprise Company"
+        subtitle="Register a new enterprise tenant in NIRNAY"
+        maxWidth="max-w-md"
+      >
+        <form onSubmit={handleCreateCompany} className="space-y-4 text-xs">
+          <div>
+            <label className="block font-semibold text-[#263746] mb-1">Company Name *</label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Horizon Logistics Corp"
+              value={newCompanyForm.name}
+              onChange={(e) => setNewCompanyForm({ ...newCompanyForm, name: e.target.value })}
+              className="w-full bg-white border border-[#DCE5EA] rounded-xl p-2.5 text-[#263746] focus:outline-none focus:border-[#247C78]"
+            />
+          </div>
+          <div>
+            <label className="block font-semibold text-[#263746] mb-1">Industry Sector *</label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Healthcare & Pharmaceuticals"
+              value={newCompanyForm.industry}
+              onChange={(e) => setNewCompanyForm({ ...newCompanyForm, industry: e.target.value })}
+              className="w-full bg-white border border-[#DCE5EA] rounded-xl p-2.5 text-[#263746] focus:outline-none focus:border-[#247C78]"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold text-[#263746] mb-1">Employees *</label>
+              <input
+                type="number"
+                min="1"
+                required
+                value={newCompanyForm.employees}
+                onChange={(e) => setNewCompanyForm({ ...newCompanyForm, employees: Number(e.target.value) })}
+                className="w-full bg-white border border-[#DCE5EA] rounded-xl p-2.5 text-[#263746] focus:outline-none focus:border-[#247C78]"
+              />
+            </div>
+            <div>
+              <label className="block font-semibold text-[#263746] mb-1">Annual IT Budget ($) *</label>
+              <input
+                type="number"
+                min="0"
+                step="10000"
+                required
+                value={newCompanyForm.itBudget}
+                onChange={(e) => setNewCompanyForm({ ...newCompanyForm, itBudget: Number(e.target.value) })}
+                className="w-full bg-white border border-[#DCE5EA] rounded-xl p-2.5 text-[#263746] font-mono focus:outline-none focus:border-[#247C78]"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block font-semibold text-[#263746] mb-1">Headquarters Region *</label>
+            <select
+              value={newCompanyForm.region}
+              onChange={(e) => setNewCompanyForm({ ...newCompanyForm, region: e.target.value })}
+              className="w-full bg-white border border-[#DCE5EA] rounded-xl p-2.5 text-[#263746] focus:outline-none focus:border-[#247C78] cursor-pointer"
+            >
+              <option value="North America">North America</option>
+              <option value="EMEA">Europe, Middle East & Africa</option>
+              <option value="Asia Pacific">Asia Pacific</option>
+              <option value="Latin America">Latin America</option>
+            </select>
+          </div>
+          <div className="flex justify-end gap-2 pt-3 border-t border-[#DCE5EA]">
+            <Button type="button" variant="outline" size="sm" onClick={() => setIsCreateCompanyModalOpen(false)}>
+              <X className="w-3.5 h-3.5 mr-1" />
+              <span>Cancel</span>
+            </Button>
+            <Button type="submit" variant="primary" size="sm">
+              <Plus className="w-3.5 h-3.5 mr-1" />
+              <span>Create Company</span>
+            </Button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Modal: Edit Company */}
       <Modal
         isOpen={Boolean(editingCompany)}
         onClose={() => setEditingCompany(null)}
         title="Edit Organization Profile"
-        subtitle={`Tenant ID: ${editingCompany?.ID}`}
+        subtitle={`Tenant ID: ${editingCompany?.ID || editingCompany?.id}`}
         maxWidth="max-w-md"
       >
         {editingCompany && (
-          <form onSubmit={handleSaveCompany} className="space-y-4">
+          <form onSubmit={handleSaveCompany} className="space-y-4 text-xs">
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Company Name</label>
+              <label className="block font-semibold text-[#263746] mb-1">Company Name</label>
               <input
                 type="text"
                 required
                 value={editingCompany.name}
                 onChange={(e) => setEditingCompany({ ...editingCompany, name: e.target.value })}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-[#DCE5EA] rounded-xl p-2.5 text-[#263746] focus:outline-none focus:border-[#247C78]"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Industry Sector</label>
-              <select
+              <label className="block font-semibold text-[#263746] mb-1">Industry Sector</label>
+              <input
+                type="text"
+                required
                 value={editingCompany.industry}
                 onChange={(e) => setEditingCompany({ ...editingCompany, industry: e.target.value })}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
-              >
-                <option value="Manufacturing & Logistics">Manufacturing & Logistics</option>
-                <option value="Financial Technology">Financial Technology</option>
-                <option value="Healthcare & Life Sciences">Healthcare & Life Sciences</option>
-                <option value="Retail & Consumer Goods">Retail & Consumer Goods</option>
-                <option value="Energy & Utilities">Energy & Utilities</option>
-                <option value="Public Sector">Public Sector</option>
-              </select>
+                className="w-full bg-white border border-[#DCE5EA] rounded-xl p-2.5 text-[#263746] focus:outline-none focus:border-[#247C78]"
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Total Employees</label>
+                <label className="block font-semibold text-[#263746] mb-1">Employees</label>
                 <input
                   type="number"
-                  min="10"
+                  min="1"
                   required
                   value={editingCompany.employees}
                   onChange={(e) => setEditingCompany({ ...editingCompany, employees: Number(e.target.value) })}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-[#DCE5EA] rounded-xl p-2.5 text-[#263746] focus:outline-none focus:border-[#247C78]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Annual IT Budget ($)</label>
+                <label className="block font-semibold text-[#263746] mb-1">IT Budget ($)</label>
                 <input
                   type="number"
-                  min="10000"
+                  min="0"
                   step="10000"
                   required
                   value={editingCompany.itBudget}
                   onChange={(e) => setEditingCompany({ ...editingCompany, itBudget: Number(e.target.value) })}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-[#DCE5EA] rounded-xl p-2.5 text-[#263746] font-mono focus:outline-none focus:border-[#247C78]"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Region</label>
+              <label className="block font-semibold text-[#263746] mb-1">Headquarters Region</label>
               <select
                 value={editingCompany.region}
                 onChange={(e) => setEditingCompany({ ...editingCompany, region: e.target.value })}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-[#DCE5EA] rounded-xl p-2.5 text-[#263746] focus:outline-none focus:border-[#247C78] cursor-pointer"
               >
                 <option value="North America">North America</option>
-                <option value="EMEA">EMEA</option>
+                <option value="EMEA">Europe, Middle East & Africa</option>
                 <option value="Asia Pacific">Asia Pacific</option>
                 <option value="Latin America">Latin America</option>
               </select>
             </div>
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+            <div className="flex justify-end gap-2 pt-3 border-t border-[#DCE5EA]">
               <Button type="button" variant="outline" size="sm" onClick={() => setEditingCompany(null)}>
-                <X className="w-3.5 h-3.5" />
+                <X className="w-3.5 h-3.5 mr-1" />
                 <span>Cancel</span>
               </Button>
               <Button type="submit" variant="primary" size="sm">
-                <Check className="w-3.5 h-3.5" />
-                <span>Save Profile</span>
+                <Check className="w-3.5 h-3.5 mr-1" />
+                <span>Save Changes</span>
               </Button>
             </div>
           </form>
         )}
       </Modal>
 
-      {/* Modal: Invite User */}
+      {/* Modal: Associate / Invite User */}
       <Modal
         isOpen={isInviteModalOpen}
         onClose={() => setIsInviteModalOpen(false)}
-        title="Invite New User Profile"
-        subtitle="Provision a team member with role-based permissions"
+        title="Associate User to Company"
+        subtitle="Connect an enterprise collaborator to this workspace"
         maxWidth="max-w-md"
       >
-        <form onSubmit={handleInviteUser} className="space-y-4">
+        <form onSubmit={handleInviteUser} className="space-y-4 text-xs">
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">Full Name *</label>
+            <label className="block font-semibold text-[#263746] mb-1">Full Name *</label>
             <input
               type="text"
               required
-              placeholder="e.g. Elena Rostova"
+              placeholder="e.g. Alex Morgan"
               value={inviteForm.fullName}
               onChange={(e) => setInviteForm({ ...inviteForm, fullName: e.target.value })}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-white border border-[#DCE5EA] rounded-xl p-2.5 text-[#263746] focus:outline-none focus:border-[#247C78]"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">Email Address *</label>
+            <label className="block font-semibold text-[#263746] mb-1">Email Address *</label>
             <input
               type="email"
               required
-              placeholder="elena.rostova@apexglobal.com"
+              placeholder="alex.morgan@apexglobal.com"
               value={inviteForm.email}
               onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+              className="w-full bg-white border border-[#DCE5EA] rounded-xl p-2.5 text-[#263746] focus:outline-none focus:border-[#247C78] font-mono"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Assigned Role *</label>
-              <select
-                value={inviteForm.role}
-                onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value })}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
-              >
-                <option value="Admin">Admin (Full Control)</option>
-                <option value="Manager">Manager (CRUD)</option>
-                <option value="Analyst">Analyst (Simulations)</option>
-                <option value="Viewer">Viewer (Read-only)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Organization *</label>
-              <select
-                value={inviteForm.company_ID}
-                onChange={(e) => setInviteForm({ ...inviteForm, company_ID: e.target.value })}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
-              >
-                <option value="comp-apex-global">Apex Global Enterprises</option>
-                <option value="comp-novasystems">Nova Systems Corp</option>
-              </select>
-            </div>
+          <div>
+            <label className="block font-semibold text-[#263746] mb-1">Company Association *</label>
+            <select
+              value={inviteForm.company_ID}
+              onChange={(e) => setInviteForm({ ...inviteForm, company_ID: e.target.value })}
+              className="w-full bg-white border border-[#DCE5EA] rounded-xl p-2.5 text-[#263746] focus:outline-none focus:border-[#247C78] cursor-pointer"
+            >
+              {data.companies.map((c) => (
+                <option key={c.ID || c.id} value={c.ID || c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
           </div>
-          <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <div className="flex justify-end gap-2 pt-3 border-t border-[#DCE5EA]">
             <Button type="button" variant="outline" size="sm" onClick={() => setIsInviteModalOpen(false)}>
-              <X className="w-3.5 h-3.5" />
+              <X className="w-3.5 h-3.5 mr-1" />
               <span>Cancel</span>
             </Button>
             <Button type="submit" variant="primary" size="sm">
-              <Shield className="w-3.5 h-3.5" />
-              <span>Add User</span>
+              <UserPlus className="w-3.5 h-3.5 mr-1" />
+              <span>Associate User</span>
             </Button>
           </div>
         </form>

@@ -9,87 +9,110 @@ export function answerQuestion(question, context = {}) {
 
   if (!q) {
     return {
-      answer: "Hello! I am your SAP Enterprise SaaS Transformation Advisor. You can ask me questions regarding your SaaS evaluation rankings, migration risks, phasing roadmap, or executive business case.",
+      answer: "Welcome to the NIRNAY Enterprise Transformation Advisory Engine. You can ask for decision support regarding your TOE readiness evaluation, SaaS selection trade-offs, risk mitigations, or 8-phase migration timeline.",
       suggestedQuestions: [
-        "Why is the top product ranked #1?",
-        "What are our most critical migration risks?",
-        "How should we plan data migration for our legacy systems?",
-        "What does our TOE readiness score indicate?"
-      ]
+        "How can we improve technology readiness?",
+        "What are our biggest transformation risks?",
+        "Which migration phase should we prioritise?",
+        "How can we reduce SaaS adoption costs?"
+      ],
+      category: 'Transformation Guidance'
     };
   }
 
-  if (q.includes('why') || q.includes('rank') || q.includes('top') || q.includes('score') || q.includes('winner')) {
-    if (topProduct) {
-      return {
-        answer: `**${topProduct.productName}** holds Rank #1 with an overall weighted score of **${topProduct.totalScore}/100**.\n\n` +
-          `• **Cost Fit**: ${topProduct.costSubScore}/100\n` +
-          `• **Security**: ${topProduct.securitySubScore}/100\n` +
-          `• **Scalability**: ${topProduct.scalabilitySubScore}/100\n` +
-          `• **Integration**: ${topProduct.integrationSubScore}/100\n` +
-          `• **Features**: ${topProduct.featuresSubScore}/100\n\n` +
-          `**Decision Rationale**: ${topProduct.reason}\n\n` +
-          `*Note: As an advisory assistant, I present and explain the engine's objective mathematical rankings based on your configured weights.*`,
-        category: 'Scoring Rationale'
-      };
-    }
+  // Question 1: How can we improve technology readiness?
+  if (q.includes('improve') && (q.includes('tech') || q.includes('readiness'))) {
+    const techScore = assessment.toeTechScore || 65;
     return {
-      answer: "No evaluation has been run yet. Please complete the Enterprise Assessment wizard and click 'Run Evaluation' to generate rankings and scores.",
-      category: 'Scoring Rationale'
+      answer: `To elevate your **Technology Readiness score (currently ${techScore}/100)**, we recommend three strategic initiatives:\n\n` +
+        `1. **Legacy Decoupling**: Modernize API interfaces around the ${assessment.legacyApplications?.length || 4} identified monolith systems prior to full cutover.\n` +
+        `2. **Automated Data Validation**: Establish automated schema validation and ETL staging pipelines to support seamless data transfer.\n` +
+        `3. **Identity & Access Standardization**: Standardize enterprise SAML 2.0 / OIDC single sign-on across all legacy and incoming cloud services.\n\n` +
+        `Target outcome: Achieving a Technology readiness benchmark above 80/100 will significantly de-risk subsequent migration phases.`,
+      category: 'Technology Strategy'
     };
   }
 
-  if (q.includes('risk') || q.includes('threat') || q.includes('vulnerability') || q.includes('security')) {
-    const criticalRisks = risks.filter(r => r.severity === 'Critical' || r.severity === 'High');
+  // Question 2: What are our biggest transformation risks?
+  if (q.includes('risk') || q.includes('threat') || q.includes('vulnerability') || q.includes('biggest')) {
+    const criticalRisks = (risks || []).filter(r => r.severity === 'Critical' || r.severity === 'High');
     let riskList = "";
     if (criticalRisks.length > 0) {
-      riskList = criticalRisks.map(r => `• **${r.riskTitle}** (Score: ${r.score}/25, ${r.severity})\n  *Mitigation*: ${r.mitigation}`).join('\n\n');
+      riskList = criticalRisks.map(r => `• **${r.riskTitle}** (${r.severity}, Score: ${r.score}/25)\n  *Mitigation*: ${r.mitigation}`).join('\n\n');
     } else {
-      riskList = "All evaluated risks currently reside within Moderate or Low severity bounds.";
+      riskList = "• All monitored risks currently reside within moderate or acceptable operational thresholds.";
     }
 
     return {
-      answer: `Based on your enterprise parameters (Infrastructure: **${assessment.infrastructure || 'On-premise'}**, Data Sensitivity: **${assessment.dataSensitivity || 'High'}**), here is your risk profile:\n\n${riskList}\n\n**Guidance**: Focus pilot testing on data schema reconciliation and implement parallel dual-runs before decommissioning legacy systems.`,
+      answer: `Based on your enterprise profile (Infrastructure: **${assessment.infrastructure || 'On-premise'}**, Data Sensitivity: **${assessment.dataSensitivity || 'High'}**), here are your primary transformation exposure vectors:\n\n${riskList}\n\n` +
+        `**Recommendation**: Ensure dual-run testing and strict data validation checkpoints are enforced in Phase 4 (Data Migration) before commencing legacy decommissioning.`,
       category: 'Risk Analysis'
     };
   }
 
-  if (q.includes('plan') || q.includes('roadmap') || q.includes('phase') || q.includes('timeline') || q.includes('duration')) {
+  // Question 3: Which migration phase should we prioritise?
+  if (q.includes('phase') || q.includes('prioritise') || q.includes('prioritize') || q.includes('roadmap') || q.includes('timeline')) {
     const totalDuration = plan.estimatedDurationMonths || 12;
-    const progress = plan.overallProgress !== undefined ? plan.overallProgress : 32.5;
+    const progress = plan.overallProgress !== undefined ? plan.overallProgress : 35;
     return {
-      answer: `Your transformation is structured into an **8-Phase Roadmap** spanning **${totalDuration} months** with current progress at **${progress}%**:\n\n` +
-        `1. **Assessment & Strategy**: TCO baseline & governance\n` +
-        `2. **SaaS Selection**: Contract SLAs & tenant setup\n` +
-        `3. **Pilot Testing & PoC**: Core journeys validation in sandbox\n` +
-        `4. **Data Migration & Cleansing**: Schema ETL & dry runs\n` +
-        `5. **Integration**: REST/OData APIs & SSO federation\n` +
-        `6. **Employee Training**: Department champions & role labs\n` +
-        `7. **Cutover & Go-Live**: Production cutover window & hypercare\n` +
-        `8. **Post-Go-Live Monitoring**: Telemetry & license optimization\n\n` +
-        `Current focus is on Phases 3 & 4 (Pilot Testing & Data Migration).`,
+      answer: `Your transformation is structured into an **8-Phase Roadmap** over **${totalDuration} months** (current progress: **${progress}%**).\n\n` +
+        `**Key Priorities Right Now**:\n` +
+        `• **Phase 3 — Pilot Testing & Proof-of-Concept**: Validate critical transactional workflows in an isolated sandbox environment.\n` +
+        `• **Phase 4 — Data Migration & Cleansing**: Prioritize legacy schema mapping and automated reconciliation dry runs. Historically, data cleansing accounts for 40% of schedule delays if deferred.\n\n` +
+        `Maintaining thorough execution across Phases 3 and 4 ensures uninterrupted operational continuity during Phase 7 (Cutover).`,
       category: 'Migration Roadmap'
     };
   }
 
-  if (q.includes('readiness') || q.includes('toe')) {
+  // Question 4: How can we reduce SaaS adoption costs?
+  if (q.includes('cost') || q.includes('reduce') || q.includes('budget') || q.includes('pricing') || q.includes('spend')) {
+    return {
+      answer: `To optimize and reduce SaaS transformation expenses (Current Annual IT Budget: **$${((assessment.itBudget || 1500000)).toLocaleString()}**):\n\n` +
+        `1. **Right-Size Tiered Licensing**: Benchmark active employee usage ($${assessment.employees || 1000} employees) to provision tiered licenses (Core vs. Light Users) instead of enterprise-wide full seats.\n` +
+        `2. **Retire Redundant Infrastructure**: Accelerate decommissioning of legacy server hosting upon completion of Phase 7 cutover, realizing up to 30% operational cost savings.\n` +
+        `3. **Multi-Year Volume Commitments**: Leverage vendor evaluation rankings to negotiate 15–20% discounts on multi-year SaaS contracts with defined SLA penalties.`,
+      category: 'Cost Optimization'
+    };
+  }
+
+  // Scoring / Top product rationale
+  if (q.includes('why') || q.includes('rank') || q.includes('top') || q.includes('score') || q.includes('winner') || q.includes('recommend')) {
+    if (topProduct) {
+      return {
+        answer: `**${topProduct.productName}** holds Rank #1 with an overall weighted score of **${topProduct.totalScore}/100**:\n\n` +
+          `• **Security Fit**: ${topProduct.securitySubScore}/100 (30% weight)\n` +
+          `• **Scalability Fit**: ${topProduct.scalabilitySubScore}/100 (25% weight)\n` +
+          `• **Cost Efficiency**: ${topProduct.costSubScore}/100 (20% weight)\n` +
+          `• **Integration Fit**: ${topProduct.integrationSubScore}/100 (15% weight)\n` +
+          `• **Feature Completeness**: ${topProduct.featuresSubScore}/100 (10% weight)\n\n` +
+          `**Decision Rationale**: ${topProduct.reason}`,
+        category: 'Scoring Rationale'
+      };
+    }
+    return {
+      answer: "No active evaluation results found. Please execute the recommendation engine from the SaaS Recommendation module to compute mathematical rankings.",
+      category: 'Scoring Rationale'
+    };
+  }
+
+  // TOE Framework diagnosis
+  if (q.includes('toe') || q.includes('readiness')) {
     const readiness = assessment.readinessScore || 78.5;
     return {
-      answer: `Your **TOE Readiness Score is ${readiness}/100**.\n\n` +
-        `• **Technology**: ${assessment.toeTechScore || 72.0}/100 — reflects legacy infrastructure footprint and technical debt.\n` +
-        `• **Organisation**: ${assessment.toeOrgScore || 80.0}/100 — evaluated from IT budget adequacy ($${(assessment.itBudget || 1500000).toLocaleString()}) and workforce scale.\n` +
-        `• **Environment**: ${assessment.toeEnvScore || 85.0}/100 — driven by expected market expansion rate (${assessment.growthRate || 18}%) and compliance standards.\n\n` +
-        `An overall score above 75 indicates a ready enterprise profile prepared for cloud SaaS adoption.`,
+      answer: `Your enterprise **TOE Readiness Score is ${readiness}/100**:\n\n` +
+        `• **Technology**: ${assessment.toeTechScore || 65.0}/100 — evaluates architectural complexity, technical debt, and cloud compatibility.\n` +
+        `• **Organisation**: ${assessment.toeOrgScore || 85.0}/100 — reflects management commitment, IT budget adequacy, and team readiness.\n` +
+        `• **Environment**: ${assessment.toeEnvScore || 87.0}/100 — accounts for industry regulatory standards and vendor ecosystem maturity.\n\n` +
+        `A score above 75 demonstrates healthy organizational capability for cloud SaaS transition.`,
       category: 'Readiness Diagnosis'
     };
   }
 
+  // Default fallback
   return {
-    answer: `**Executive Summary for CFO & Leadership**:\n\n` +
-      `• **Capital Allocation**: Current annual IT budget is $${(assessment.itBudget || 1500000).toLocaleString()} across ${assessment.employees || 1000} users.\n` +
-      `• **Target TCO Benefits**: Shifting from monolithic on-premise infrastructure reduces server maintenance by up to 35% and improves deployment agility by 4x.\n` +
-      `• **Recommendation**: Proceed with ${topProduct ? topProduct.productName : 'recommended SaaS solution'} on a phased 12-month timeline to maintain cost predictability and preserve business continuity.`,
-    category: 'Business Case'
+    answer: `Regarding your inquiry on "${question}":\n\n` +
+      `For **${assessment.company?.name || 'your enterprise'}** (${assessment.employees || 1000} employees, ${assessment.infrastructure || 'On-premise'} infrastructure), successful transformation relies on aligning technology architecture with organizational change management.\n\n` +
+      `We recommend reviewing the 8-phase roadmap and ensuring that data validation protocols are finalized before proceeding with cutover.`,
+    category: 'Advisory Guidance'
   };
 }
-

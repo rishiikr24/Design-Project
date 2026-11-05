@@ -1,6 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { Layout } from './Layout';
-import { ProtectedRoute } from './ProtectedRoute';
 import { NotFound } from './NotFound';
 
 import { DashboardPage } from '../features/dashboard/DashboardPage';
@@ -11,26 +10,23 @@ import { RiskPage } from '../features/risk/RiskPage';
 import { PlannerPage } from '../features/planner/PlannerPage';
 import { AssistantPage } from '../features/assistant/AssistantPage';
 import { CompanyPage } from '../features/company/CompanyPage';
-import { AuthPage } from '../features/auth/AuthPage';
+import { ReportsPage } from '../features/reports/ReportsPage';
+import { SettingsPage } from '../features/settings/SettingsPage';
 import { HealthPage } from '../features/health/HealthPage';
 
 export const router = createBrowserRouter([
+  // Redirect legacy /login directly into the application
   {
     path: '/login',
-    element: <AuthPage />
+    element: <Navigate to="/dashboard" replace />
   },
-  // Dev-only: unauthenticated connectivity check
   {
     path: '/health',
     element: <HealthPage />
   },
   {
     path: '/',
-    element: (
-      <ProtectedRoute>
-        <Layout />
-      </ProtectedRoute>
-    ),
+    element: <Layout />,
     errorElement: <NotFound />,
     children: [
       {
@@ -68,6 +64,14 @@ export const router = createBrowserRouter([
       {
         path: 'company',
         element: <CompanyPage />
+      },
+      {
+        path: 'reports',
+        element: <ReportsPage />
+      },
+      {
+        path: 'settings',
+        element: <SettingsPage />
       },
       {
         path: '*',

@@ -105,20 +105,11 @@ export const authService = {
       }
     }
 
-    if (!shouldUseMocks()) {
-      // In live Supabase mode, if no session exists, the user is unauthenticated
+    if (typeof window !== 'undefined' && localStorage.getItem('saas_auth_logged_out') === 'true') {
       return null;
     }
 
-    if (typeof window === 'undefined') return DEFAULT_USER;
-    const saved = localStorage.getItem(CURRENT_USER_KEY);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        // fallback
-      }
-    }
+    // Default fallback user so development and assessment exploration proceeds without login gate
     return DEFAULT_USER;
   },
 
@@ -169,8 +160,9 @@ export const authService = {
     };
 
     if (typeof window !== 'undefined') {
+      localStorage.removeItem('saas_auth_logged_out');
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(match));
-      window.dispatchEvent(new CustomEvent('saas:role_changed', { detail: match }));
+      window.dispatchEvent(new CustomEvent('saas:user_changed', { detail: match }));
     }
     return match;
   },
@@ -251,8 +243,9 @@ export const authService = {
     }
 
     if (typeof window !== 'undefined') {
+      localStorage.removeItem('saas_auth_logged_out');
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(match));
-      window.dispatchEvent(new CustomEvent('saas:role_changed', { detail: match }));
+      window.dispatchEvent(new CustomEvent('saas:user_changed', { detail: match }));
     }
     return match;
   },
@@ -274,6 +267,30 @@ export const authService = {
     return newUser;
   },
 
+  async resetPassword(email) {
+    if (!email) throw new Error('Email is required');
+    if (!shouldUseMocks()) {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/login?type=recovery`
+      });
+      if (error) throw new Error(error.message);
+      return true;
+    }
+    return true;
+  },
+
+  async updateUserPassword(newPassword) {
+    if (!newPassword || newPassword.length < 6) {
+      throw new Error('Password must be at least 6 characters long');
+    }
+    if (!shouldUseMocks()) {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw new Error(error.message);
+      return true;
+    }
+    return true;
+  },
+
   async logout() {
     if (!shouldUseMocks()) {
       try {
@@ -283,8 +300,9 @@ export const authService = {
       }
     }
     if (typeof window !== 'undefined') {
+      localStorage.setItem('saas_auth_logged_out', 'true');
       localStorage.removeItem(CURRENT_USER_KEY);
-      window.dispatchEvent(new CustomEvent('saas:role_changed', { detail: null }));
+      window.dispatchEvent(new CustomEvent('saas:user_changed', { detail: null }));
     }
     return true;
   },

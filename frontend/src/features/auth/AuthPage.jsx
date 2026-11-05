@@ -70,7 +70,6 @@ export function AuthPage() {
         fullName: regFullName,
         email: regEmail,
         password: regPassword,
-        role: 'Viewer',
         company_ID: regCompany
       });
       showToast(`Account created! Welcome, ${newUser.fullName || newUser.email}`, 'success');

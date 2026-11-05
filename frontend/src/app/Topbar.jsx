@@ -1,46 +1,13 @@
-import { useState, useEffect } from 'react';
-import { Building2, LogOut, User } from 'lucide-react';
+import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Menu, LogOut } from 'lucide-react';
 import { authService } from '../services/authService';
-import { companyService } from '../services/companyService';
-import { shouldUseMocks } from '../lib/supabase';
 import { useToast } from '../components/Toast';
 
-export function Topbar() {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [companies, setCompanies] = useState([]);
-  const [selectedCompanyId, setSelectedCompanyId] = useState('comp-apex-global');
+export function Topbar({ onToggleSidebar }) {
+  const location = useLocation();
+  const navigate = useNavigate();
   const { showToast } = useToast();
-  const isMockMode = shouldUseMocks();
-
-  useEffect(() => {
-    async function loadShellData() {
-      const user = await authService.getCurrentUser();
-      setCurrentUser(user);
-      if (user?.company_id || user?.company_ID) {
-        setSelectedCompanyId(user.company_id || user.company_ID);
-      }
-      const data = await companyService.getCompanies();
-      setCompanies(data.companies || []);
-    }
-    loadShellData();
-
-    const handleRoleChanged = (e) => {
-      if (e.detail) {
-        setCurrentUser(e.detail);
-        if (e.detail.company_id || e.detail.company_ID) {
-          setSelectedCompanyId(e.detail.company_id || e.detail.company_ID);
-        }
-      }
-    };
-    window.addEventListener('saas:role_changed', handleRoleChanged);
-    return () => window.removeEventListener('saas:role_changed', handleRoleChanged);
-  }, []);
-
-  const handleCompanyChange = (e) => {
-    const newCompId = e.target.value;
-    setSelectedCompanyId(newCompId);
-    showToast(`Organization view updated`, 'info');
-  };
 
   const handleLogout = async () => {
     try {
@@ -52,61 +19,61 @@ export function Topbar() {
     }
   };
 
-  const userCompany = companies.find(c => (c.ID || c.id) === selectedCompanyId)?.name ||
-    (currentUser?.company_id || currentUser?.company_ID || 'Apex Global Enterprises');
+  const getBreadcrumb = () => {
+    const path = location.pathname;
+    if (path.includes('dashboard')) return 'Dashboard';
+    if (path.includes('company')) return 'Company profile';
+    if (path.includes('assessment')) return 'Readiness assessment';
+    if (path.includes('catalog')) return 'SaaS catalogue';
+    if (path.includes('recommendation')) return 'Recommendations';
+    if (path.includes('risk')) return 'Risk analysis';
+    if (path.includes('planner')) return 'Migration roadmap';
+    if (path.includes('assistant')) return 'AI Advisor';
+    if (path.includes('reports')) return 'Reports';
+    if (path.includes('settings')) return 'Settings';
+    return 'Workspace';
+  };
 
   return (
-    <header className="h-16 bg-white border-b border-[#DCE5EA] px-6 flex items-center justify-between shrink-0 shadow-sm z-10">
-      {/* Title */}
-      <div>
-        <h1 className="text-base font-bold text-[#102B46] tracking-tight leading-none">
-          NIRNAY <span className="font-normal text-slate-500 text-xs">| Enterprise Transformation Platform</span>
-        </h1>
-        <span className="text-[11px] text-slate-400 mt-1 block">
-          Strategic Cloud Migration Decision-Support System
-        </span>
+    <header className="h-14 bg-white border-b border-[#DCE5EA] px-4 sm:px-6 flex items-center justify-between shrink-0 select-none z-10 min-w-0">
+      {/* Left: Mobile Hamburger & Prototype Breadcrumb */}
+      <div className="flex items-center gap-2.5 min-w-0 truncate">
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="lg:hidden p-1.5 -ml-1 text-[#102B46] hover:bg-[#F4F7FA] rounded-md transition-colors"
+            aria-label="Toggle navigation menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
+        <div className="flex items-center gap-1.5 text-xs truncate">
+          <span className="text-[#718096] hidden xs:inline">Workspace</span>
+          <span className="text-[#718096] hidden xs:inline">/</span>
+          <span className="font-semibold text-[#102B46] truncate">{getBreadcrumb()}</span>
+        </div>
       </div>
 
-      {/* Action controls */}
-      <div className="flex items-center gap-3.5">
-        {/* Company Selector or Live Tenant Display */}
-        {isMockMode ? (
-          <div className="flex items-center gap-1.5 bg-[#F4F7FA] border border-[#DCE5EA] rounded-xl px-3 py-1.5 text-xs text-[#102B46]">
-            <Building2 className="w-3.5 h-3.5 text-[#247C78]" />
-            <select
-              value={selectedCompanyId}
-              onChange={handleCompanyChange}
-              className="bg-transparent text-[#102B46] font-medium focus:outline-none cursor-pointer pr-1"
-            >
-              {companies.map((c) => (
-                <option key={c.ID || c.id} value={c.ID || c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 bg-[#F4F7FA] border border-[#DCE5EA] rounded-xl px-3 py-1.5 text-xs text-[#102B46]">
-            <Building2 className="w-3.5 h-3.5 text-[#247C78]" />
-            <span className="font-semibold max-w-[180px] truncate">{userCompany}</span>
-          </div>
-        )}
+      {/* Right controls: Demo workspace pill & User Avatar */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-[#F4F7FA] text-[#718096] border border-[#DCE5EA]">
+          Demo workspace
+        </span>
 
-        {/* User Role Badge */}
-        <div className="flex items-center gap-2 bg-[#F4F7FA] border border-[#DCE5EA] rounded-xl px-3 py-1.5 text-xs text-[#102B46]">
-          <User className="w-3.5 h-3.5 text-[#247C78]" />
-          <span className="text-slate-500 font-medium">Role:</span>
-          <span className="font-bold text-[#247C78] uppercase">{currentUser?.role || 'Viewer'}</span>
-        </div>
+        <button
+          onClick={() => navigate('/settings')}
+          className="w-7 h-7 rounded-full bg-[#247C78]/15 border border-[#247C78]/30 text-[#247C78] text-[11px] font-bold flex items-center justify-center hover:opacity-80 transition-opacity shrink-0"
+          title="Account profile"
+        >
+          AM
+        </button>
 
-        {/* Sign Out Button */}
         <button
           onClick={handleLogout}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#DCE5EA] text-slate-500 hover:text-red-600 hover:bg-red-50 text-xs font-semibold transition"
-          title="Sign out of Nirnay"
+          className="text-[#718096] hover:text-red-600 transition-colors p-1"
+          title="Sign out"
         >
           <LogOut className="w-3.5 h-3.5" />
-          <span>Sign Out</span>
         </button>
       </div>
     </header>
