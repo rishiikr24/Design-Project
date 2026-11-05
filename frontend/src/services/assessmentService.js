@@ -75,11 +75,26 @@ export const assessmentService = {
   async getAssessmentById(id = 'assessment-ref-case') {
     if (!shouldUseMocks()) {
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from('assessments')
-          .select('*, legacy_applications(*), requirements(*)')
-          .eq('id', id)
-          .maybeSingle();
+          .select('*, legacy_applications(*), requirements(*)');
+        
+        if (id && id !== 'assessment-ref-case') {
+          query = query.eq('id', id);
+        } else {
+          // If default placeholder requested in live mode, fetch the most recent assessment for the user's company
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: profile } = await supabase
+              .from('profiles').select('company_id').eq('id', user.id).maybeSingle();
+            if (profile?.company_id) {
+              query = query.eq('company_id', profile.company_id);
+            }
+          }
+          query = query.order('created_at', { ascending: false }).limit(1);
+        }
+
+        const { data, error } = await query.maybeSingle();
 
         if (!error && data) {
           return mapAssessmentFromPostgres(data, data.legacy_applications || [], data.requirements || []);

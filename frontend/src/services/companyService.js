@@ -94,6 +94,44 @@ export const companyService = {
     };
   },
 
+  async createCompany(companyData) {
+    if (!shouldUseMocks()) {
+      const payload = {
+        name: companyData.name,
+        industry: companyData.industry || 'Technology',
+        employees: Number(companyData.employees) || 100,
+        it_budget: Number(companyData.itBudget || companyData.it_budget) || 500000,
+        region: companyData.region || 'North America'
+      };
+      if (companyData.id) payload.id = companyData.id;
+
+      const { data, error } = await supabase
+        .from('companies')
+        .insert(payload)
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+      return mapCompanyFromPostgres(data);
+    }
+
+    const companies = getStoredCompanies();
+    const newComp = {
+      ID: companyData.id || `comp-${Date.now()}`,
+      id: companyData.id || `comp-${Date.now()}`,
+      name: companyData.name,
+      industry: companyData.industry || 'Technology',
+      employees: Number(companyData.employees) || 100,
+      itBudget: Number(companyData.itBudget || companyData.it_budget) || 500000,
+      region: companyData.region || 'North America'
+    };
+    companies.push(newComp);
+    saveStoredCompanies(companies);
+    return newComp;
+  },
+
   async updateCompany(id, updates) {
     if (!shouldUseMocks()) {
       try {
