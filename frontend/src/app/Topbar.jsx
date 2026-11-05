@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Sparkles, Building2, LogOut } from 'lucide-react';
-import { Button } from '../components/Button';
-import { Badge } from '../components/Badge';
+import { Building2, LogOut, User } from 'lucide-react';
 import { authService } from '../services/authService';
 import { companyService } from '../services/companyService';
-import { dashboardService } from '../services/dashboardService';
 import { shouldUseMocks } from '../lib/supabase';
 import { useToast } from '../components/Toast';
 
@@ -12,7 +9,6 @@ export function Topbar() {
   const [currentUser, setCurrentUser] = useState(null);
   const [companies, setCompanies] = useState([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState('comp-apex-global');
-  const [isSeeding, setIsSeeding] = useState(false);
   const { showToast } = useToast();
   const isMockMode = shouldUseMocks();
 
@@ -40,31 +36,10 @@ export function Topbar() {
     return () => window.removeEventListener('saas:role_changed', handleRoleChanged);
   }, []);
 
-  const handleRoleChange = async (e) => {
-    const newRole = e.target.value;
-    const updated = await authService.switchRole(newRole);
-    setCurrentUser(updated);
-    showToast(`Active role switched to: ${newRole}`, 'info');
-  };
-
   const handleCompanyChange = (e) => {
-    const id = e.target.value;
-    setSelectedCompanyId(id);
-    const comp = companies.find((c) => c.ID === id || c.id === id);
-    showToast(`Switched active tenant to: ${comp ? comp.name : id}`, 'info');
-  };
-
-  const handleSeedReferenceCase = async () => {
-    setIsSeeding(true);
-    try {
-      const result = await dashboardService.seedReferenceCase();
-      showToast(result.message || 'Reference Case Loaded (1,000 users, on-prem ERP, High Security)', 'success');
-      window.dispatchEvent(new CustomEvent('saas:data_refreshed'));
-    } catch (err) {
-      showToast(`Error seeding reference: ${err.message}`, 'danger');
-    } finally {
-      setIsSeeding(false);
-    }
+    const newCompId = e.target.value;
+    setSelectedCompanyId(newCompId);
+    showToast(`Organization view updated`, 'info');
   };
 
   const handleLogout = async () => {
@@ -77,122 +52,62 @@ export function Topbar() {
     }
   };
 
-  // Resolve user display company
   const userCompany = companies.find(c => (c.ID || c.id) === selectedCompanyId)?.name ||
-    (currentUser?.company_id || currentUser?.company_ID || 'Organization');
+    (currentUser?.company_id || currentUser?.company_ID || 'Apex Global Enterprises');
 
   return (
-    <header className="h-16 bg-slate-900/90 border-b border-slate-800 px-5 flex items-center justify-between shrink-0 backdrop-blur-md">
-      {/* Brand logo & title */}
-      <div className="flex items-center gap-3.5">
-        <div className="w-10 h-7 bg-blue-600 rounded flex items-center justify-center font-black text-white text-xs tracking-wider shadow-md shadow-blue-900/50" title="Nirnay - Enterprise SaaS Transformation Platform">
-          NIRNAY
-        </div>
-        <div>
-          <h1 className="text-sm font-bold text-white tracking-tight leading-none">
-            Nirnay <span className="font-normal text-slate-400">| Enterprise Transformation Framework</span>
-          </h1>
-          <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">
-            React + Tailwind + Supabase Architecture | Decision-Support Platform
-          </span>
-        </div>
+    <header className="h-16 bg-white border-b border-[#DCE5EA] px-6 flex items-center justify-between shrink-0 shadow-sm z-10">
+      {/* Title */}
+      <div>
+        <h1 className="text-base font-bold text-[#102B46] tracking-tight leading-none">
+          NIRNAY <span className="font-normal text-slate-500 text-xs">| Enterprise Transformation Platform</span>
+        </h1>
+        <span className="text-[11px] text-slate-400 mt-1 block">
+          Strategic Cloud Migration Decision-Support System
+        </span>
       </div>
 
       {/* Action controls */}
-      <div className="flex items-center gap-3">
-        {/* 1-Click Load Reference Case (Only in Mock / Sandbox Mode) */}
-        {isMockMode && (
-          <Button
-            variant="outlineCyan"
-            size="sm"
-            onClick={handleSeedReferenceCase}
-            disabled={isSeeding}
-            title="Load 1,000-employee on-premise reference case"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-            <span>{isSeeding ? 'Seeding...' : 'Load Reference Case'}</span>
-          </Button>
-        )}
-
+      <div className="flex items-center gap-3.5">
         {/* Company Selector or Live Tenant Display */}
         {isMockMode ? (
-          <div className="flex items-center gap-1.5 bg-slate-800/80 border border-slate-700 rounded-lg px-2.5 py-1 text-xs">
-            <Building2 className="w-3.5 h-3.5 text-slate-400" />
+          <div className="flex items-center gap-1.5 bg-[#F4F7FA] border border-[#DCE5EA] rounded-xl px-3 py-1.5 text-xs text-[#102B46]">
+            <Building2 className="w-3.5 h-3.5 text-[#247C78]" />
             <select
               value={selectedCompanyId}
               onChange={handleCompanyChange}
-              className="bg-transparent text-slate-200 focus:outline-none cursor-pointer pr-1"
+              className="bg-transparent text-[#102B46] font-medium focus:outline-none cursor-pointer pr-1"
             >
               {companies.map((c) => (
-                <option key={c.ID || c.id} value={c.ID || c.id} className="bg-slate-900 text-slate-200">
+                <option key={c.ID || c.id} value={c.ID || c.id}>
                   {c.name}
                 </option>
               ))}
             </select>
           </div>
         ) : (
-          <div className="flex items-center gap-1.5 bg-slate-800/80 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-300">
-            <Building2 className="w-3.5 h-3.5 text-slate-400" />
-            <span className="font-medium max-w-[160px] truncate">{userCompany}</span>
+          <div className="flex items-center gap-2 bg-[#F4F7FA] border border-[#DCE5EA] rounded-xl px-3 py-1.5 text-xs text-[#102B46]">
+            <Building2 className="w-3.5 h-3.5 text-[#247C78]" />
+            <span className="font-semibold max-w-[180px] truncate">{userCompany}</span>
           </div>
         )}
 
-        {/* Role Display / Switcher */}
-        {isMockMode ? (
-          <div className="flex items-center gap-1.5 bg-slate-800/80 border border-slate-700 rounded-lg px-2.5 py-1 text-xs">
-            <Badge
-              variant={
-                currentUser?.role === 'Admin'
-                  ? 'primary'
-                  : currentUser?.role === 'Manager'
-                  ? 'cyan'
-                  : currentUser?.role === 'Analyst'
-                  ? 'purple'
-                  : 'default'
-              }
-            >
-              {currentUser?.role || 'Admin'}
-            </Badge>
-            <select
-              value={currentUser?.role || 'Admin'}
-              onChange={handleRoleChange}
-              className="bg-transparent text-slate-200 focus:outline-none cursor-pointer"
-            >
-              <option value="Admin" className="bg-slate-900 text-slate-200">Role: Admin</option>
-              <option value="Manager" className="bg-slate-900 text-slate-200">Role: Manager</option>
-              <option value="Analyst" className="bg-slate-900 text-slate-200">Role: Analyst</option>
-              <option value="Viewer" className="bg-slate-900 text-slate-200">Role: Viewer (Read-only)</option>
-            </select>
-          </div>
-        ) : (
-          <Badge
-            variant={
-              (currentUser?.role || '').toLowerCase() === 'admin'
-                ? 'primary'
-                : (currentUser?.role || '').toLowerCase() === 'manager'
-                ? 'cyan'
-                : (currentUser?.role || '').toLowerCase() === 'analyst'
-                ? 'purple'
-                : 'default'
-            }
-          >
-            Role: {currentUser?.role || 'Viewer'}
-          </Badge>
-        )}
-
-        {/* User profile avatar & Sign out */}
-        <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-white text-xs font-bold shadow-md" title={currentUser?.email || ''}>
-            {currentUser?.fullName?.split(' ').map((n) => n[0]).slice(0, 2).join('') || 'U'}
-          </div>
-          <button
-            onClick={handleLogout}
-            title="Sign out"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+        {/* User Role Badge */}
+        <div className="flex items-center gap-2 bg-[#F4F7FA] border border-[#DCE5EA] rounded-xl px-3 py-1.5 text-xs text-[#102B46]">
+          <User className="w-3.5 h-3.5 text-[#247C78]" />
+          <span className="text-slate-500 font-medium">Role:</span>
+          <span className="font-bold text-[#247C78] uppercase">{currentUser?.role || 'Viewer'}</span>
         </div>
+
+        {/* Sign Out Button */}
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#DCE5EA] text-slate-500 hover:text-red-600 hover:bg-red-50 text-xs font-semibold transition"
+          title="Sign out of Nirnay"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          <span>Sign Out</span>
+        </button>
       </div>
     </header>
   );

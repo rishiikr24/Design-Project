@@ -8,22 +8,23 @@ export function Button({
   children,
   ...props
 }) {
-  const base = 'inline-flex items-center justify-center font-medium rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed select-none';
+  const base = 'inline-flex items-center justify-center font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none shadow-sm';
 
   const variants = {
-    primary: 'bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-900/30 focus:ring-blue-500',
-    secondary: 'bg-slate-700 hover:bg-slate-600 text-slate-100 border border-slate-600 focus:ring-slate-400',
-    outline: 'border border-slate-600 hover:border-slate-400 text-slate-200 hover:bg-slate-800/80 focus:ring-slate-400',
-    outlineCyan: 'border border-cyan-500/80 text-cyan-400 hover:bg-cyan-950/40 focus:ring-cyan-400',
-    ghost: 'hover:bg-slate-800 text-slate-300 hover:text-white focus:ring-slate-400',
-    danger: 'bg-red-600 hover:bg-red-500 text-white shadow-md shadow-red-900/30 focus:ring-red-500',
-    success: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-900/30 focus:ring-emerald-500'
+    primary: 'bg-[#102B46] hover:bg-[#0B1E32] text-white focus:ring-[#102B46]',
+    secondary: 'bg-[#F4F7FA] hover:bg-slate-200 text-[#102B46] border border-[#DCE5EA] focus:ring-[#247C78]',
+    teal: 'bg-[#247C78] hover:bg-[#1D6864] text-white focus:ring-[#247C78]',
+    outline: 'border border-[#DCE5EA] hover:border-slate-400 text-[#102B46] hover:bg-[#F4F7FA] focus:ring-[#247C78]',
+    outlineCyan: 'border border-[#247C78] text-[#247C78] hover:bg-[#247C78]/10 focus:ring-[#247C78]',
+    ghost: 'hover:bg-slate-100 text-slate-600 hover:text-[#102B46] focus:ring-slate-300 shadow-none',
+    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500',
+    success: 'bg-[#247C78] hover:bg-[#1D6864] text-white focus:ring-[#247C78]'
   };
 
   const sizes = {
-    sm: 'text-xs px-2.5 py-1.5 gap-1.5',
-    md: 'text-sm px-4 py-2 gap-2',
-    lg: 'text-base px-5 py-2.5 gap-2.5'
+    sm: 'text-xs px-3 py-1.5 gap-1.5',
+    md: 'text-xs px-4 py-2 gap-2',
+    lg: 'text-sm px-5 py-2.5 gap-2.5'
   };
 
   return (
