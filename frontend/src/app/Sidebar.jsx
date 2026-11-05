@@ -66,7 +66,10 @@ export function Sidebar() {
   return (
     <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0">
       <div className="p-4 border-b border-slate-800">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-blue-400 block mb-0.5">
+          Nirnay Framework
+        </span>
+        <span className="text-[10px] text-slate-500">
           Core Transformation Modules
         </span>
       </div>

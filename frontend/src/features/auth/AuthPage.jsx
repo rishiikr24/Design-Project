@@ -109,7 +109,7 @@ export function AuthPage() {
           <div className="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 mx-auto mb-2">
             <Shield className="w-6 h-6" />
           </div>
-          <CardTitle className="text-xl">Authentication & RBAC Gateway</CardTitle>
+          <CardTitle className="text-xl">Nirnay — Authentication & Access Gateway</CardTitle>
           <p className="text-xs text-slate-400 mt-1">Enterprise SaaS Transformation Platform (Design Project-I, E1ITA306)</p>
 
           {/* Tab selector */}
