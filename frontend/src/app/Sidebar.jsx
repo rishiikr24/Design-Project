@@ -64,17 +64,27 @@ const navItems = [
 
 export function Sidebar() {
   return (
-    <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0">
-      <div className="p-4 border-b border-slate-800">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-blue-400 block mb-0.5">
-          Nirnay Framework
-        </span>
-        <span className="text-[10px] text-slate-500">
-          Core Transformation Modules
-        </span>
+    <aside className="w-64 bg-[#102B46] border-r border-[#0B1E32] flex flex-col shrink-0 text-white shadow-xl z-20">
+      {/* Brand Header */}
+      <div className="p-5 border-b border-white/10 flex items-center gap-3">
+        <div className="w-9 h-9 rounded-lg bg-[#247C78] flex items-center justify-center text-white font-extrabold text-sm shadow-md tracking-wider">
+          N
+        </div>
+        <div>
+          <span className="text-sm font-bold tracking-tight text-white block leading-none">
+            NIRNAY
+          </span>
+          <span className="text-[10px] text-slate-300 font-medium block mt-1">
+            Transformation Framework
+          </span>
+        </div>
       </div>
 
-      <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto">
+      {/* Navigation */}
+      <nav className="flex-1 p-3.5 space-y-1 overflow-y-auto">
+        <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          Core Modules
+        </div>
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -85,15 +95,15 @@ export function Sidebar() {
                 cn(
                   'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all group',
                   isActive
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/30 font-semibold'
-                    : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/80'
+                    ? 'bg-[#247C78] text-white shadow-md shadow-[#247C78]/30 font-semibold'
+                    : 'text-slate-300 hover:text-white hover:bg-white/10'
                 )
               }
             >
               <Icon className="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" />
               <div className="flex flex-col text-left truncate">
                 <span className="truncate">{item.name}</span>
-                <span className="text-[10px] text-slate-400 font-normal">
+                <span className="text-[10px] text-slate-400 font-normal group-hover:text-slate-200">
                   {item.moduleNum}
                 </span>
               </div>
@@ -102,7 +112,8 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-slate-800 text-[11px] text-slate-400 text-center">
+      {/* Footer */}
+      <div className="p-4 border-t border-white/10 text-[11px] text-slate-400 text-center font-medium">
         <span>Design Project-I | E1ITA306</span>
       </div>
     </aside>
