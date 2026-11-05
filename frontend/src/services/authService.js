@@ -105,6 +105,11 @@ export const authService = {
       }
     }
 
+    if (!shouldUseMocks()) {
+      // In live Supabase mode, if no session exists, the user is unauthenticated
+      return null;
+    }
+
     if (typeof window === 'undefined') return DEFAULT_USER;
     const saved = localStorage.getItem(CURRENT_USER_KEY);
     if (saved) {
