@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
-import { Sliders, RefreshCw, RotateCcw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sliders, RefreshCw, RotateCcw, Award, Check, ExternalLink, ArrowRight } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Badge } from '../../components/Badge';
+import { PageHeader } from '../../components/PageHeader';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/Table';
 import { recommendationService } from '../../services/recommendationService';
 import { catalogService } from '../../services/catalogService';
 import { DEFAULT_WEIGHTS, validateWeights } from '../../lib/scoring';
@@ -38,7 +40,7 @@ export function RecommendationPage() {
       try {
         await runEvaluation();
         const prods = await catalogService.getProducts();
-        setAllProducts(prods);
+        setAllProducts(prods || []);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -84,28 +86,29 @@ export function RecommendationPage() {
     { label: 'Platform Category', key: 'category' },
     { label: 'Vendor / Provider', key: 'vendor' },
     { label: 'Pricing Model', key: 'pricingModel' },
-    { label: 'Cost Fit Rating', render: p => <span><strong>{p.costScore}/100</strong> ({p.costLevel})</span> },
-    { label: 'Security & Certifications', render: p => <span><strong>{p.securityScore}/100</strong><br/><span className="text-slate-400 text-[10px]">{p.securityRating}</span></span> },
-    { label: 'Scalability Tier', render: p => <span><strong>{p.scalabilityScore}/100</strong> ({p.scalabilityRating})</span> },
-    { label: 'Integration Capability', render: p => <span><strong>{p.integrationScore}/100</strong><br/><span className="text-slate-400 text-[10px]">{p.integrationCapability}</span></span> },
-    { label: 'Features Maturity', render: p => <span><strong>{p.featuresScore}/100</strong></span> },
+    { label: 'Cost Fit Rating', render: p => <span><strong className="text-[#102B46]">{p.costScore}/100</strong> ({p.costLevel})</span> },
+    { label: 'Security & Certifications', render: p => <span><strong className="text-[#102B46]">{p.securityScore}/100</strong><br/><span className="text-[#718096] text-[10px]">{p.securityRating}</span></span> },
+    { label: 'Scalability Tier', render: p => <span><strong className="text-[#102B46]">{p.scalabilityScore}/100</strong> ({p.scalabilityRating})</span> },
+    { label: 'Integration Capability', render: p => <span><strong className="text-[#102B46]">{p.integrationScore}/100</strong><br/><span className="text-[#718096] text-[10px]">{p.integrationCapability}</span></span> },
+    { label: 'Features Maturity', render: p => <span><strong className="text-[#102B46]">{p.featuresScore}/100</strong></span> },
     { label: 'Migration Complexity', render: p => <Badge variant={p.migrationComplexity === 'High' ? 'danger' : p.migrationComplexity === 'Medium' ? 'warning' : 'primary'}>{p.migrationComplexity} Complexity</Badge> },
     { label: 'Deployment Topology', key: 'deploymentType' }
   ];
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
+        <div className="animate-spin rounded-xl h-9 w-9 border-2 border-[#247C78] border-t-transparent"></div>
+        <p className="text-xs text-[#718096]">Evaluating multi-criteria SaaS candidates...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-md mx-auto my-16 p-6 rounded-2xl bg-red-950/40 border border-red-500/40 text-center space-y-4">
-        <h3 className="text-base font-bold text-white">Evaluation Error</h3>
-        <p className="text-xs text-red-300">{error}</p>
+      <div className="max-w-md mx-auto my-16 p-6 rounded-2xl bg-white border border-red-200 shadow-sm text-center space-y-4">
+        <h3 className="text-base font-bold text-[#102B46]">Evaluation Error</h3>
+        <p className="text-xs text-red-600">{error}</p>
         <Button variant="primary" size="sm" onClick={() => runEvaluation()}>
           Retry Evaluation
         </Button>
@@ -114,29 +117,27 @@ export function RecommendationPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto pb-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-800">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-bold text-white tracking-tight">SaaS Recommendation Engine & Comparison</h2>
-            <Badge variant="cyan">Module 4</Badge>
-          </div>
-          <p className="text-xs text-slate-400">
-            Multi-criteria weighted scoring algorithm with explainable justification and side-by-side product comparison.
-          </p>
-        </div>
-        <Button variant="primary" size="sm" onClick={() => runEvaluation()}>
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Run Weighted Evaluation</span>
-        </Button>
-      </div>
+      <PageHeader
+        title="SaaS Recommendations & Evaluation Engine"
+        subtitle="Multi-criteria weighted scoring algorithm with explainable justification and side-by-side product benchmark."
+        badge="Module 4"
+        actions={
+          <Button variant="primary" size="sm" onClick={() => runEvaluation()}>
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Run Weighted Evaluation</span>
+          </Button>
+        }
+      />
 
       {/* Live Weight Sensitivity Simulation */}
-      <Card className="border-blue-500/20 bg-slate-900/90 shadow-lg">
+      <Card className="shadow-xs">
         <CardHeader className="pb-3 flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Sliders className="w-4 h-4 text-cyan-400" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#247C78]/10 text-[#247C78] flex items-center justify-center shrink-0">
+              <Sliders className="w-4 h-4" />
+            </div>
             <div>
               <CardTitle className="text-sm">Live Weight Sensitivity Simulation</CardTitle>
               <CardDescription>Tweak criteria weights in real time to test how enterprise priority shifts alter product rankings.</CardDescription>
@@ -146,33 +147,33 @@ export function RecommendationPage() {
             <span
               className={`text-xs font-bold px-2.5 py-1 rounded-full ${
                 isWeightsValid
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                  : 'bg-red-500/20 text-red-400 border border-red-500/40'
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'bg-red-50 text-red-700 border border-red-200'
               }`}
             >
-              Sum: {weightsSum}% {isWeightsValid ? '✓ Valid' : '✕'}
+              Sum: {weightsSum}% {isWeightsValid ? '✓ Valid' : '✕ Must equal 100%'}
             </span>
-            <Button variant="outline" size="sm" onClick={handleResetWeights} title="Reset to PRD standard default">
+            <Button variant="outline" size="sm" onClick={handleResetWeights} title="Reset to standard defaults">
               <RotateCcw className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Reset</span>
             </Button>
-            <Button variant="outlineCyan" size="sm" onClick={handleRecalculateSim}>
+            <Button variant="primary" size="sm" onClick={handleRecalculateSim}>
               Recalculate
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3.5">
             {[
-              { key: 'cost', label: 'Cost Fit', color: 'text-amber-400' },
-              { key: 'security', label: 'Security', color: 'text-blue-400' },
-              { key: 'scalability', label: 'Scalability', color: 'text-cyan-400' },
-              { key: 'integration', label: 'Integration', color: 'text-emerald-400' },
-              { key: 'features', label: 'Features', color: 'text-purple-400' }
+              { key: 'cost', label: 'Cost Fit', color: 'text-amber-600', accent: 'accent-amber-600' },
+              { key: 'security', label: 'Security', color: 'text-[#247C78]', accent: 'accent-[#247C78]' },
+              { key: 'scalability', label: 'Scalability', color: 'text-[#102B46]', accent: 'accent-[#102B46]' },
+              { key: 'integration', label: 'Integration', color: 'text-emerald-600', accent: 'accent-emerald-600' },
+              { key: 'features', label: 'Features', color: 'text-purple-600', accent: 'accent-purple-600' }
             ].map(crit => (
-              <div key={crit.key} className="space-y-1 p-2.5 rounded-lg bg-slate-800/40 border border-slate-700/50">
+              <div key={crit.key} className="space-y-1.5 p-3 rounded-xl bg-[#F4F7FA] border border-[#DCE5EA]">
                 <div className="flex justify-between text-xs">
-                  <span className="text-slate-300 font-medium">{crit.label}:</span>
+                  <span className="text-[#263746] font-semibold">{crit.label}:</span>
                   <span className={`font-mono font-bold ${crit.color}`}>{weights[crit.key]}%</span>
                 </div>
                 <input
@@ -182,7 +183,7 @@ export function RecommendationPage() {
                   step="5"
                   value={weights[crit.key]}
                   onChange={(e) => handleSimSliderChange(crit.key, e.target.value)}
-                  className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  className={`w-full h-1.5 bg-[#DCE5EA] rounded-lg appearance-none cursor-pointer ${crit.accent}`}
                 />
               </div>
             ))}
@@ -207,10 +208,10 @@ export function RecommendationPage() {
                   copy[idx] = e.target.value;
                   setComparing(copy);
                 }}
-                className="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-blue-500 max-w-[140px] truncate"
+                className="bg-white border border-[#DCE5EA] rounded-lg px-2.5 py-1 text-xs text-[#263746] font-medium focus:outline-none focus:border-[#247C78] max-w-[150px] truncate shadow-2xs cursor-pointer"
               >
                 {allProducts.map(p => (
-                  <option key={p.ID || p.id} value={p.ID || p.id} className="bg-slate-900 text-white">
+                  <option key={p.ID || p.id} value={p.ID || p.id}>
                     {p.name}
                   </option>
                 ))}
@@ -219,87 +220,88 @@ export function RecommendationPage() {
           </div>
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-800/80 text-slate-300 border-b border-slate-700/80">
-              <tr>
-                <th className="p-3 w-48 font-bold">Dimension</th>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-52">Dimension</TableHead>
                 {compareProducts.map(p => (
-                  <th key={p.ID || p.id} className="p-3 font-bold text-white text-sm">{p.name}</th>
+                  <TableHead key={p.ID || p.id} className="text-[#102B46] text-xs">
+                    {p.name}
+                  </TableHead>
                 ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {compareAttributes.map(attr => (
-                <tr key={attr.label} className="hover:bg-slate-800/30">
-                  <td className="p-3 font-semibold text-slate-400 bg-slate-900/40">{attr.label}</td>
+                <TableRow key={attr.label}>
+                  <TableCell className="font-semibold text-[#718096] bg-[#F4F7FA]/40">{attr.label}</TableCell>
                   {compareProducts.map(p => (
-                    <td key={p.ID || p.id} className="p-3 text-slate-200">
+                    <TableCell key={p.ID || p.id} className="text-[#263746]">
                       {attr.render ? attr.render(p) : p[attr.key] || 'N/A'}
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
-      {results.length === 0 && (
-        <Card className="p-8 text-center bg-slate-900 border-slate-800 space-y-4">
-          <h3 className="text-base font-bold text-white">No Recommendations Available</h3>
-          <p className="text-xs text-slate-400 max-w-md mx-auto">
-            No product recommendations could be calculated. Complete an enterprise assessment or recalculate with custom criteria.
-          </p>
-          <Button variant="primary" size="sm" onClick={() => runEvaluation()}>
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Recalculate Recommendations</span>
-          </Button>
-        </Card>
-      )}
-
       {/* Ranked Recommendations Leaderboard */}
-      <div className="space-y-4">
-        <h3 className="text-base font-bold text-white tracking-tight">Ranked Recommendations Leaderboard</h3>
+      <div className="space-y-3.5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-bold text-[#102B46] tracking-tight">Ranked Recommendations Leaderboard</h3>
+          <span className="text-xs text-[#718096]">Sorted by Multi-Criteria Composite Score</span>
+        </div>
+
         {results.map((r) => (
-          <Card key={r.productId} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 gap-4 hover:border-slate-600 transition">
+          <div
+            key={r.productId}
+            className="bg-white rounded-xl border border-[#DCE5EA] p-5 shadow-xs hover:border-[#247C78] hover:shadow-sm transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-5"
+          >
             <div className="flex items-start gap-4">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-extrabold text-sm shrink-0 ${
-                r.rank === 1 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
-                r.rank === 2 ? 'bg-slate-300/20 text-slate-200 border border-slate-400/40' :
-                r.rank === 3 ? 'bg-amber-700/20 text-amber-500 border border-amber-700/40' :
-                'bg-slate-800 text-slate-400 border border-slate-700'
-              }`}>
+              <div
+                className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-sm shrink-0 ${
+                  r.rank === 1
+                    ? 'bg-amber-50 text-amber-700 border border-amber-300'
+                    : r.rank === 2
+                    ? 'bg-slate-100 text-slate-700 border border-slate-300'
+                    : r.rank === 3
+                    ? 'bg-amber-100 text-amber-800 border border-amber-400'
+                    : 'bg-[#F4F7FA] text-[#718096] border border-[#DCE5EA]'
+                }`}
+              >
                 #{r.rank}
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-base font-bold text-white">{r.productName}</h4>
-                  <Badge variant="cyan">{r.category}</Badge>
+                  <h4 className="text-base font-bold text-[#102B46]">{r.productName}</h4>
+                  <Badge variant="primary">{r.category}</Badge>
+                  <span className="text-xs text-[#718096]">by {r.vendor}</span>
                 </div>
-                <p className="text-xs text-slate-400">{r.vendor}</p>
-                <p className="text-xs text-slate-300 pt-1 leading-relaxed max-w-2xl">
-                  <strong>Rationale:</strong> {r.reason}
-                </p>
+                <div className="p-3 rounded-lg bg-[#F4F7FA] border border-[#DCE5EA] text-xs text-[#263746] leading-relaxed max-w-3xl mt-2">
+                  <strong className="text-[#102B46]">Decision Rationale:</strong> {r.reason}
+                </div>
               </div>
             </div>
 
-            <div className="flex flex-col items-end shrink-0 w-full md:w-48 space-y-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800">
+            <div className="flex flex-col items-end shrink-0 w-full md:w-52 space-y-2 pt-3 md:pt-0 border-t md:border-t-0 border-[#DCE5EA]">
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-black text-blue-400">{formatNumber(r.totalScore)}</span>
-                <span className="text-xs text-slate-400 font-mono">/100</span>
+                <span className="text-3xl font-black text-[#247C78]">{formatNumber(r.totalScore)}</span>
+                <span className="text-xs text-[#718096] font-mono">/100</span>
               </div>
-              <div className="w-full space-y-1 text-[10px]">
-                <div className="flex justify-between text-slate-400">
-                  <span>Sec: {r.securitySubScore}</span>
-                  <span>Scale: {r.scalabilitySubScore}</span>
-                  <span>Cost: {r.costSubScore}</span>
+              <div className="w-full space-y-1.5 text-[11px]">
+                <div className="flex justify-between text-[#718096]">
+                  <span>Sec: <strong className="text-[#263746]">{r.securitySubScore}</strong></span>
+                  <span>Scale: <strong className="text-[#263746]">{r.scalabilitySubScore}</strong></span>
+                  <span>Cost: <strong className="text-[#263746]">{r.costSubScore}</strong></span>
                 </div>
-                <div className="w-full bg-slate-800 rounded-full h-1 overflow-hidden">
-                  <div className="bg-blue-500 h-full rounded-full" style={{ width: `${r.totalScore}%` }} />
+                <div className="w-full bg-[#F4F7FA] rounded-full h-1.5 overflow-hidden border border-[#DCE5EA]">
+                  <div className="bg-[#247C78] h-full rounded-full" style={{ width: `${r.totalScore}%` }} />
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
         ))}
       </div>
     </div>

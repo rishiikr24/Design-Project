@@ -95,16 +95,17 @@ export const companyService = {
   },
 
   async createCompany(companyData) {
-    if (!shouldUseMocks()) {
-      const payload = {
-        name: companyData.name,
-        industry: companyData.industry || 'Technology',
-        employees: Number(companyData.employees) || 100,
-        it_budget: Number(companyData.itBudget || companyData.it_budget) || 500000,
-        region: companyData.region || 'North America'
-      };
-      if (companyData.id) payload.id = companyData.id;
+    const newId = companyData.id || `comp-${Date.now()}`;
+    const payload = {
+      id: newId,
+      name: companyData.name,
+      industry: companyData.industry || 'Technology',
+      employees: Number(companyData.employees) || 100,
+      it_budget: Number(companyData.itBudget || companyData.it_budget) || 500000,
+      region: companyData.region || 'North America'
+    };
 
+    if (!shouldUseMocks()) {
       const { data, error } = await supabase
         .from('companies')
         .insert(payload)
@@ -119,13 +120,13 @@ export const companyService = {
 
     const companies = getStoredCompanies();
     const newComp = {
-      ID: companyData.id || `comp-${Date.now()}`,
-      id: companyData.id || `comp-${Date.now()}`,
-      name: companyData.name,
-      industry: companyData.industry || 'Technology',
-      employees: Number(companyData.employees) || 100,
-      itBudget: Number(companyData.itBudget || companyData.it_budget) || 500000,
-      region: companyData.region || 'North America'
+      ID: newId,
+      id: newId,
+      name: payload.name,
+      industry: payload.industry,
+      employees: payload.employees,
+      itBudget: payload.it_budget,
+      region: payload.region
     };
     companies.push(newComp);
     saveStoredCompanies(companies);
@@ -169,5 +170,39 @@ export const companyService = {
     companies[idx] = updated;
     saveStoredCompanies(companies);
     return updated;
+  },
+
+  async getCompanyAssessments(companyId) {
+    if (!shouldUseMocks()) {
+      try {
+        const { data, error } = await supabase
+          .from('assessments')
+          .select('id, title, readiness_score, status, created_at')
+          .eq('company_id', companyId)
+          .order('created_at', { ascending: false });
+
+        if (!error && data) {
+          return data.map(a => ({
+            id: a.id,
+            title: a.title,
+            readinessScore: a.readiness_score,
+            status: a.status,
+            createdAt: a.created_at
+          }));
+        }
+      } catch {
+        // Fallback
+      }
+    }
+
+    return [
+      {
+        id: 'assessment-ref-case',
+        title: 'Core Systems Cloud Modernization',
+        readinessScore: 78,
+        status: 'Completed',
+        createdAt: new Date().toISOString()
+      }
+    ];
   }
 };

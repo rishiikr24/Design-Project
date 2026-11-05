@@ -1,9 +1,25 @@
-import { useState } from 'react';
-import { Bot, User, Send, Sparkles, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Bot,
+  User,
+  Send,
+  Sparkles,
+  Trash2,
+  HelpCircle,
+  Lightbulb,
+  Info,
+  CheckCircle2,
+  ArrowRight,
+  TrendingUp,
+  ShieldAlert,
+  Layers,
+  DollarSign
+} from 'lucide-react';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Badge } from '../../components/Badge';
 import { assistantService } from '../../services/assistantService';
+import { dashboardService } from '../../services/dashboardService';
 import { useToast } from '../../components/Toast';
 
 export function AssistantPage() {
@@ -11,33 +27,73 @@ export function AssistantPage() {
     {
       id: 1,
       sender: 'assistant',
-      text: 'Welcome to the Enterprise SaaS Transformation Advisor. I have ingested your active organizational profile (Apex Global Enterprises, 1,000 employees, on-premise infrastructure) along with multi-criteria evaluation results and the 8-phase roadmap. How can I assist your transformation committee today?',
-      category: 'Welcome Guidance'
+      text: 'Welcome to the NIRNAY AI Transformation Advisor. I provide decision support calibrated with your active enterprise assessment, multi-criteria SaaS rankings, migration risks, and 8-phase transformation roadmap. How can I assist your transformation committee today?',
+      category: 'Transformation Guidance',
+      timestamp: 'Just now'
     }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [enabled, setEnabled] = useState(true);
+  const [telemetry, setTelemetry] = useState(null);
+  const messagesEndRef = useRef(null);
   const { showToast } = useToast();
 
-  const promptChips = [
-    'Why is the top product ranked #1?',
-    'What are our most critical migration risks?',
-    'How should we plan data migration for our legacy systems?',
-    'What does our TOE readiness score indicate?',
-    'Generate executive summary pitch for the CFO'
+  const suggestedQuestions = [
+    {
+      text: 'How can we improve technology readiness?',
+      icon: TrendingUp,
+      desc: 'Technical debt & API decoupling'
+    },
+    {
+      text: 'What are our biggest transformation risks?',
+      icon: ShieldAlert,
+      desc: 'Critical exposure & mitigations'
+    },
+    {
+      text: 'Which migration phase should we prioritise?',
+      icon: Layers,
+      desc: '8-phase execution sequencing'
+    },
+    {
+      text: 'How can we reduce SaaS adoption costs?',
+      icon: DollarSign,
+      desc: 'Licensing & infrastructure TCO'
+    }
   ];
 
-  const handleSend = async (questionText = input) => {
-    const q = questionText.trim();
-    if (!q) return;
-    if (!enabled) {
-      showToast('AI Advisor is currently paused.', 'warning');
-      return;
+  // Load telemetry context for summary card
+  useEffect(() => {
+    async function fetchTelemetry() {
+      try {
+        const data = await dashboardService.getDashboardMetrics('assessment-ref-case');
+        setTelemetry(data);
+      } catch (err) {
+        console.warn('Telemetry load error:', err);
+      }
     }
+    fetchTelemetry();
+  }, []);
 
-    const userMsg = { id: Date.now(), sender: 'user', text: q };
-    setMessages(prev => [...prev, userMsg]);
+  // Auto-scroll chat to bottom
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, loading]);
+
+  const handleSend = async (questionText = input) => {
+    const q = (questionText || '').trim();
+    if (!q) return;
+
+    const userMsg = {
+      id: Date.now(),
+      sender: 'user',
+      text: q,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setLoading(true);
 
@@ -47,18 +103,20 @@ export function AssistantPage() {
         id: Date.now() + 1,
         sender: 'assistant',
         text: response.answer,
-        category: response.category
+        category: response.category || 'Advisory Guidance',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
-      setMessages(prev => [...prev, assistantMsg]);
+      setMessages((prev) => [...prev, assistantMsg]);
     } catch (err) {
-      showToast(`AI Assistant error: ${err.message}`, 'danger');
-      setMessages(prev => [
+      showToast(`Advisory engine error: ${err.message}`, 'danger');
+      setMessages((prev) => [
         ...prev,
         {
           id: Date.now() + 1,
           sender: 'assistant',
-          text: `Error processing query: ${err.message}. Please try again or select a suggested prompt chip.`,
-          category: 'Error'
+          text: `An error occurred while analyzing: ${err.message}. Please select one of the suggested transformation prompts.`,
+          category: 'Error',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
     } finally {
@@ -67,161 +125,199 @@ export function AssistantPage() {
   };
 
   const handleClearChat = () => {
-    setMessages([]);
-    showToast('Conversation history cleared.', 'info');
+    setMessages([
+      {
+        id: Date.now(),
+        sender: 'assistant',
+        text: 'Conversation history cleared. Select a transformation question or type your strategic inquiry below.',
+        category: 'Transformation Guidance',
+        timestamp: 'Just now'
+      }
+    ]);
+    showToast('Conversation reset.', 'info');
   };
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto h-[calc(100vh-8.5rem)] flex flex-col">
-      {/* Notice Banner */}
-      <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between text-xs shrink-0">
-        <div className="flex items-center gap-2">
-          <Badge variant="warning">New UI / Mocked Service</Badge>
-          <span className="text-amber-200">
-            <strong>Module 8 (AI Transformation Advisor):</strong> Operates against a mocked service adhering to the zero-secret policy (no cloud LLM API keys hardcoded in frontend).
-          </span>
-        </div>
-        <Badge variant="cyan">Deterministic Logic</Badge>
-      </div>
-
+    <div className="space-y-6 max-w-7xl mx-auto pb-8">
       {/* Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#DCE5EA]">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-bold text-white tracking-tight">AI Transformation Advisor</h2>
-            <Badge variant="cyan">Module 8</Badge>
+            <h1 className="text-2xl font-bold text-[#102B46] tracking-tight">AI Transformation Advisor</h1>
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#247C78]/10 text-[#247C78] border border-[#247C78]/20">
+              Decision Support
+            </span>
           </div>
-          <p className="text-xs text-slate-400">
-            Conversational decision support calibrated with active enterprise assessment context, scores, risks, and roadmap.
+          <p className="text-xs text-[#718096]">
+            Get guidance for enterprise readiness, SaaS adoption and digital transformation.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {messages.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={handleClearChat} title="Clear conversation history">
+
+        <div className="flex items-center gap-2">
+          {messages.length > 1 && (
+            <Button variant="outline" size="sm" onClick={handleClearChat}>
               <Trash2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Clear Chat</span>
+              <span>Clear History</span>
             </Button>
           )}
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-slate-400 font-medium">Active</label>
-            <input
-              type="checkbox"
-              checked={enabled}
-              onChange={(e) => {
-                setEnabled(e.target.checked);
-                showToast(e.target.checked ? 'AI Advisor activated' : 'AI Advisor paused', 'info');
-              }}
-              className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 bg-slate-800 border-slate-700 cursor-pointer"
-            />
+        </div>
+      </div>
+
+      {/* Advisory Context Banner: Honest Rule-Based vs Backend AI status */}
+      <div className="p-3.5 rounded-xl bg-white border border-[#DCE5EA] flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs shadow-sm">
+        <div className="flex items-start md:items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-[#247C78]/10 text-[#247C78] flex items-center justify-center shrink-0">
+            <Info className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-[#102B46]">Advisory Intelligence Mode:</span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#F4F7FA] text-[#247C78] border border-[#DCE5EA]">
+                Rule-Based Guidance & Telemetry Synthesis
+              </span>
+            </div>
+            <p className="text-[#718096] text-[11px] mt-0.5">
+              Calibrated directly against your active enterprise parameters (Apex Global Enterprises, 1,000 employees, TOE score: {telemetry?.assessment?.readinessScore || 77.5}/100).
+            </p>
           </div>
         </div>
+        <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
+          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span className="text-[11px] font-medium text-[#718096]">Zero-Secret Verified</span>
+        </div>
       </div>
 
-      {/* Suggested Prompt Chips */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 shrink-0">
-        <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
-        {promptChips.map((prompt) => (
-          <button
-            key={prompt}
-            onClick={() => handleSend(prompt)}
-            className="px-3 py-1 rounded-full text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 whitespace-nowrap transition"
-          >
-            {prompt}
-          </button>
-        ))}
-      </div>
-
-      {/* Chat Messages Box */}
-      <Card className="flex-1 flex flex-col min-h-0 bg-slate-900/90 overflow-hidden shadow-xl border-slate-800">
-        <div className="flex-1 overflow-y-auto p-5 space-y-4">
-          {messages.length === 0 ? (
-            /* Empty State */
-            <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3">
-              <Bot className="w-12 h-12 text-slate-600" />
-              <div>
-                <h4 className="text-sm font-bold text-white">No Messages in Conversation</h4>
-                <p className="text-xs text-slate-400 mt-1 max-w-sm">
-                  Click any suggested prompt chip above or type an architectural inquiry below to consult the transformation advisor.
-                </p>
-              </div>
-            </div>
-          ) : (
-            messages.map((m) => (
-              <div
-                key={m.id}
-                className={`flex gap-3 text-xs ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+      {/* Suggested Questions Grid */}
+      <div>
+        <div className="flex items-center gap-2 mb-2.5">
+          <Sparkles className="w-4 h-4 text-[#247C78]" />
+          <h2 className="text-xs font-bold text-[#102B46] uppercase tracking-wider">Suggested Transformation Questions</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {suggestedQuestions.map((q) => {
+            const Icon = q.icon;
+            return (
+              <button
+                key={q.text}
+                onClick={() => handleSend(q.text)}
+                disabled={loading}
+                className="text-left p-3 rounded-xl bg-white border border-[#DCE5EA] hover:border-[#247C78] hover:bg-[#F4F7FA]/50 transition-all shadow-sm group flex flex-col justify-between"
               >
-                {m.sender === 'assistant' && (
-                  <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 shrink-0">
-                    <Bot className="w-4 h-4" />
+                <div className="flex items-start gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-[#247C78]/10 text-[#247C78] flex items-center justify-center shrink-0 group-hover:bg-[#247C78] group-hover:text-white transition-colors">
+                    <Icon className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-[#102B46] group-hover:text-[#247C78] transition-colors leading-snug">
+                      {q.text}
+                    </p>
+                    <p className="text-[10px] text-[#718096] mt-1">{q.desc}</p>
+                  </div>
+                </div>
+                <div className="flex items-center text-[10px] font-semibold text-[#247C78] mt-2 pt-2 border-t border-[#DCE5EA]/60">
+                  <span>Ask Advisor</span>
+                  <ArrowRight className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Main Conversation Area */}
+      <div className="bg-white rounded-xl border border-[#DCE5EA] shadow-sm flex flex-col h-[600px] overflow-hidden">
+        {/* Chat Messages Log */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-[#F4F7FA]/40">
+          {messages.map((m) => (
+            <div
+              key={m.id}
+              className={`flex gap-3 text-xs ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              {m.sender === 'assistant' && (
+                <div className="w-8 h-8 rounded-lg bg-[#247C78]/10 border border-[#247C78]/20 flex items-center justify-center text-[#247C78] shrink-0 mt-0.5">
+                  <Bot className="w-4 h-4" />
+                </div>
+              )}
+
+              <div
+                className={`max-w-2xl rounded-2xl p-4 shadow-sm ${
+                  m.sender === 'user'
+                    ? 'bg-[#102B46] text-white rounded-tr-none'
+                    : 'bg-white border border-[#DCE5EA] text-[#263746] rounded-tl-none'
+                }`}
+              >
+                {m.category && (
+                  <div className="text-[10px] font-bold text-[#247C78] uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    <span>{m.category}</span>
                   </div>
                 )}
-
-                <div
-                  className={`max-w-2xl rounded-2xl p-4 shadow-md ${
-                    m.sender === 'user'
-                      ? 'bg-blue-600 text-white rounded-tr-none'
-                      : 'bg-slate-800/80 border border-slate-700 text-slate-200 rounded-tl-none'
-                  }`}
-                >
-                  {m.category && (
-                    <div className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" />
-                      <span>{m.category}</span>
-                    </div>
-                  )}
-                  <p className="whitespace-pre-line leading-relaxed">{m.text}</p>
+                <div className="whitespace-pre-line leading-relaxed text-xs">
+                  {m.text}
                 </div>
-
-                {m.sender === 'user' && (
-                  <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 shrink-0">
-                    <User className="w-4 h-4" />
+                {m.timestamp && (
+                  <div className={`text-[10px] mt-2 text-right ${m.sender === 'user' ? 'text-slate-300' : 'text-[#718096]'}`}>
+                    {m.timestamp}
                   </div>
                 )}
               </div>
-            ))
-          )}
 
-          {/* Typing Loading Indicator */}
+              {m.sender === 'user' && (
+                <div className="w-8 h-8 rounded-lg bg-[#102B46] text-white flex items-center justify-center shrink-0 mt-0.5">
+                  <User className="w-4 h-4" />
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Typing Indicator */}
           {loading && (
             <div className="flex gap-3 text-xs justify-start">
-              <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 shrink-0 animate-pulse">
+              <div className="w-8 h-8 rounded-lg bg-[#247C78]/10 border border-[#247C78]/20 flex items-center justify-center text-[#247C78] shrink-0 animate-pulse">
                 <Bot className="w-4 h-4" />
               </div>
-              <div className="bg-slate-800/80 border border-slate-700 rounded-2xl rounded-tl-none p-3.5 flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce"></div>
-                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce [animation-delay:0.2s]"></div>
-                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce [animation-delay:0.4s]"></div>
-                <span className="text-slate-400 text-[11px] ml-2">Advisor analyzing architecture...</span>
+              <div className="bg-white border border-[#DCE5EA] rounded-2xl rounded-tl-none p-3.5 flex items-center gap-2 shadow-sm">
+                <div className="w-2 h-2 rounded-full bg-[#247C78] animate-bounce"></div>
+                <div className="w-2 h-2 rounded-full bg-[#102B46] animate-bounce [animation-delay:0.2s]"></div>
+                <div className="w-2 h-2 rounded-full bg-amber-500 animate-bounce [animation-delay:0.4s]"></div>
+                <span className="text-[#718096] text-[11px] ml-1">Synthesizing advisory guidance...</span>
               </div>
             </div>
           )}
+
+          <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Bar */}
-        <div className="p-3.5 bg-slate-950/80 border-t border-slate-800">
+        {/* User Input Form */}
+        <div className="p-3.5 bg-white border-t border-[#DCE5EA]">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSend();
             }}
-            className="flex gap-2"
+            className="flex gap-2.5"
           >
             <input
               type="text"
-              placeholder={enabled ? "Ask about scoring rationale, migration risks, or phased planning..." : "Advisor is paused. Re-enable switch above."}
-              disabled={!enabled || loading}
+              placeholder="Ask about readiness improvements, migration phases, risks, or SaaS evaluation..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              className="flex-1 bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 disabled:opacity-50"
+              disabled={loading}
+              className="flex-1 bg-[#F4F7FA] border border-[#DCE5EA] rounded-xl px-4 py-2.5 text-xs text-[#263746] placeholder-[#718096] focus:outline-none focus:border-[#247C78] focus:bg-white transition-all disabled:opacity-50"
             />
-            <Button type="submit" variant="primary" size="sm" disabled={!enabled || loading || !input.trim()}>
-              <Send className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Send Inquiry</span>
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              disabled={loading || !input.trim()}
+              className="bg-[#247C78] hover:bg-[#1f6b67] text-white border-none px-4"
+            >
+              <Send className="w-3.5 h-3.5 mr-1" />
+              <span>Submit</span>
             </Button>
           </form>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

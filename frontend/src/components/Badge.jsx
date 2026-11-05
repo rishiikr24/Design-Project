@@ -1,24 +1,27 @@
+import React from 'react';
 import { cn } from '../lib/utils';
 
-export function Badge({ variant = 'default', className, children, ...props }) {
+export function Badge({ children, variant = 'primary', className = '' }) {
   const variants = {
-    default: 'bg-slate-700/80 text-slate-200 border-slate-600',
-    primary: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    cyan: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
-    success: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-    warning: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-    danger: 'bg-red-500/15 text-red-400 border-red-500/30',
-    purple: 'bg-purple-500/15 text-purple-400 border-purple-500/30'
+    primary: 'bg-[#247C78]/10 text-[#247C78] border-[#247C78]/25',
+    navy: 'bg-[#102B46]/10 text-[#102B46] border-[#102B46]/20',
+    amber: 'bg-[#E7B65C]/20 text-[#92400E] border-[#E7B65C]/40',
+    success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    warning: 'bg-amber-50 text-amber-700 border-amber-200',
+    danger: 'bg-red-50 text-red-700 border-red-200',
+    neutral: 'bg-[#F4F7FA] text-[#718096] border-[#DCE5EA]',
+    blue: 'bg-blue-50 text-blue-700 border-blue-200',
+    cyan: 'bg-cyan-50 text-cyan-800 border-cyan-200',
+    purple: 'bg-purple-50 text-purple-700 border-purple-200'
   };
 
   return (
     <span
       className={cn(
-        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border tracking-wide uppercase',
-        variants[variant],
+        'inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border',
+        variants[variant] || variants.primary,
         className
       )}
-      {...props}
     >
       {children}
     </span>
