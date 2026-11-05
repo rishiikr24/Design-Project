@@ -8,6 +8,16 @@ export default {
   theme: {
     extend: {
       colors: {
+        nirnay: {
+          navy: '#102B46',
+          'navy-dark': '#0B1E32',
+          teal: '#247C78',
+          'teal-hover': '#1D6864',
+          bg: '#F4F7FA',
+          white: '#FFFFFF',
+          amber: '#E7B65C',
+          border: '#DCE5EA'
+        },
         sap: {
           blue: '#0070F2',
           'blue-hover': '#0056B3',
