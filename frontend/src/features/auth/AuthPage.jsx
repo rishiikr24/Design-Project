@@ -204,22 +204,7 @@ export function AuthPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-[#102B46] mb-1.5">Organization *</label>
-                <select
-                  value={regCompany}
-                  onChange={(e) => setRegCompany(e.target.value)}
-                  className="w-full bg-[#F4F7FA] border border-[#DCE5EA] rounded-xl px-3.5 py-2 text-xs text-[#102B46] focus:outline-none focus:ring-2 focus:ring-[#247C78] focus:bg-white transition cursor-pointer"
-                >
-                  {companies.length > 0 ? (
-                    companies.map(c => (
-                      <option key={c.ID || c.id} value={c.ID || c.id}>{c.name}</option>
-                    ))
-                  ) : (
-                    <option value="comp-apex-global">Apex Global Enterprises</option>
-                  )}
-                </select>
-              </div>
+
 
               <div className="pt-2">
                 <Button
