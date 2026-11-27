@@ -36,7 +36,7 @@ The platform evaluates enterprise candidates (e.g., Salesforce, Microsoft Dynami
 - **Frontend SPA:** [React 18](https://react.dev/), [Vite](https://vitejs.dev/), [Tailwind CSS](https://tailwindcss.com/), [React Router v6](https://reactrouter.com/), [Lucide Icons](https://lucide.dev/), [Recharts](https://recharts.org/)
 - **Data & Auth Tier:** [Supabase](https://supabase.com/) (PostgreSQL 15+, Supabase Auth with Row-Level Security, PostgREST API)
 - **Serverless Compute:** Supabase Edge Functions (Deno / TypeScript)
-- **Unit & Integration Testing:** [Vitest](https://vitest.dev/), React Testing Library (**74 passing automated tests** across 15 test suites)
+- **Unit & Integration Testing:** [Vitest](https://vitest.dev/), React Testing Library (**77 passing automated tests** across 16 test suites)
 - **Archived Prototype:** `legacy-sap/` preserves the original SAP Cloud Application Programming (CAP) / SAPUI5 initial prototype, which was successfully transformed and migrated to this production-ready React 18 + Supabase architecture.
 
 ---
@@ -78,7 +78,7 @@ Every capability from the original enterprise blueprint is implemented and cover
 │   │   │   └── risk/             # 5x5 Risk Exposure Heatmap
 │   │   ├── lib/                  # Core algorithms (scoring, risk, readiness, planner)
 │   │   ├── services/             # Data access layer (Supabase SDK with mock fallback)
-│   │   └── test/                 # 74 Vitest unit & integration tests
+│   │   └── test/                 # 77 Vitest unit & integration tests
 │   ├── package.json
 │   └── vite.config.js
 ├── supabase/                     # Supabase Backend & Compute

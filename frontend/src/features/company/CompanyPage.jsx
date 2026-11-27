@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Building2, Users, Edit3, Plus, UserPlus, Check, X, Activity } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Building2, Users, Edit3, Plus, UserPlus, Check, X, Activity, ClipboardCheck, ArrowRight } from 'lucide-react';
 import { Button } from '../../components/Button';
 import { Modal } from '../../components/Modal';
 import { companyService } from '../../services/companyService';
@@ -19,6 +20,8 @@ export function CompanyPage() {
   const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState(null);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [newlyCreatedCompanyId, setNewlyCreatedCompanyId] = useState(null);
+  const navigate = useNavigate();
   const { showToast } = useToast();
 
   const [newCompanyForm, setNewCompanyForm] = useState({
@@ -78,6 +81,15 @@ export function CompanyPage() {
     }
   };
 
+  const handleTakeAssessment = (company) => {
+    const comp = company || selectedCompany;
+    const compId = comp?.id || comp?.ID;
+    if (!compId) return;
+    navigate(`/assessment?companyId=${encodeURIComponent(compId)}`, {
+      state: { companyId: compId }
+    });
+  };
+
   const handleOpenEditCompany = (company, e) => {
     if (e) e.stopPropagation();
     setEditingCompany({ ...company });
@@ -108,12 +120,14 @@ export function CompanyPage() {
     }
     try {
       const created = await companyService.createCompany(newCompanyForm);
+      const createdId = created?.id || created?.ID;
       if (created._syncError) {
         showToast(`Not saved to database: ${created._syncError}. Saved locally, not synced.`, 'warning');
       } else {
         showToast(`Created organization ${created.name}`, 'success');
       }
       setIsCreateCompanyModalOpen(false);
+      setNewlyCreatedCompanyId(createdId);
       setNewCompanyForm({
         name: '',
         industry: 'Technology & Cloud',
@@ -121,7 +135,11 @@ export function CompanyPage() {
         itBudget: 750000,
         region: 'North America'
       });
-      loadData();
+      const res = await companyService.getCompanies();
+      setData(res);
+      const match = res.companies?.find(c => (c.id || c.ID) === createdId) || created;
+      setSelectedCompany(match);
+      setCompanyAssessments([]);
     } catch (err) {
       showToast(`Failed to create company: ${err.message}`, 'danger');
     }
@@ -243,6 +261,21 @@ export function CompanyPage() {
                       <strong className="font-semibold text-[#247C78]">{formatCurrency(c.itBudget)}</strong>
                     </div>
                   </div>
+
+                  <div className="mt-3 pt-2">
+                    <Button
+                      variant={isSelected ? 'primary' : 'outline'}
+                      size="xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTakeAssessment(c);
+                      }}
+                      className="w-full flex items-center justify-center font-semibold"
+                    >
+                      <ClipboardCheck className="w-3.5 h-3.5 mr-1" />
+                      <span>Take Assessment</span>
+                    </Button>
+                  </div>
                 </div>
               );
             })}
@@ -251,6 +284,33 @@ export function CompanyPage() {
 
         {/* Right Column: Active Company Deep View & Assessment History */}
         <div className="space-y-6 lg:col-span-2">
+          {newlyCreatedCompanyId && (selectedCompany?.id || selectedCompany?.ID) === newlyCreatedCompanyId && (
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-[#247C78]/15 via-emerald-50 to-teal-50 border-2 border-[#247C78]/40 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#247C78] text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <ClipboardCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-[#102B46]">
+                    Take Assessment for {selectedCompany.name}
+                  </h4>
+                  <p className="text-xs text-[#718096]">
+                    Organization created successfully. Run the 5-step readiness assessment to generate transformation scores and roadmap.
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => handleTakeAssessment(selectedCompany)}
+                className="shrink-0 font-semibold shadow-sm"
+              >
+                <span>Take Assessment for {selectedCompany.name}</span>
+                <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+              </Button>
+            </div>
+          )}
+
           {selectedCompany && (
             <div className="bg-white border border-[#DCE5EA] rounded-2xl p-6 shadow-2xs space-y-5">
               <div className="flex items-start justify-between pb-4 border-b border-[#DCE5EA]">
@@ -261,10 +321,16 @@ export function CompanyPage() {
                   <h3 className="text-xl font-bold text-[#102B46] mt-2">{selectedCompany.name}</h3>
                   <p className="text-xs text-[#718096] mt-0.5">Headquarters & Jurisdiction: <strong>{selectedCompany.region}</strong></p>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => handleOpenEditCompany(selectedCompany)}>
-                  <Edit3 className="w-3.5 h-3.5 mr-1.5" />
-                  <span>Edit Details</span>
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="primary" size="sm" onClick={() => handleTakeAssessment(selectedCompany)}>
+                    <ClipboardCheck className="w-3.5 h-3.5 mr-1.5" />
+                    <span>Take Assessment</span>
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => handleOpenEditCompany(selectedCompany)}>
+                    <Edit3 className="w-3.5 h-3.5 mr-1.5" />
+                    <span>Edit Details</span>
+                  </Button>
+                </div>
               </div>
 
               {/* 3 Metric Summary Tiles */}
@@ -308,8 +374,17 @@ export function CompanyPage() {
                     <tbody className="divide-y divide-[#DCE5EA]">
                       {companyAssessments.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="p-4 text-center text-[#718096]">
-                            No assessments logged yet for this enterprise.
+                          <td colSpan={4} className="p-6 text-center text-[#718096]">
+                            <p className="mb-3 text-xs">No assessments logged yet for this enterprise.</p>
+                            <Button
+                              variant="primary"
+                              size="xs"
+                              onClick={() => handleTakeAssessment(selectedCompany)}
+                              className="mx-auto"
+                            >
+                              <ClipboardCheck className="w-3.5 h-3.5 mr-1.5" />
+                              <span>Take Assessment</span>
+                            </Button>
                           </td>
                         </tr>
                       ) : (

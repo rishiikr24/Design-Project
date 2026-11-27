@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   RefreshCw,
   Award,
@@ -41,15 +41,18 @@ import { companyService } from '../../services/companyService';
 import { assessmentService } from '../../services/assessmentService';
 import { formatNumber, formatCurrency } from '../../lib/utils';
 import { useToast } from '../../components/Toast';
-import { getActiveAssessmentId, setActiveAssessmentId } from '../../lib/activeAssessment';
+import { getActiveAssessmentId, setActiveAssessmentId, getActiveCompanyId, setActiveCompanyId } from '../../lib/activeAssessment';
 
 export function DashboardPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const urlCompanyId = searchParams.get('companyId');
+  const urlAssessmentId = searchParams.get('assessmentId');
   const [metrics, setMetrics] = useState(null);
   const [companies, setCompanies] = useState([]);
-  const [selectedCompanyId, setSelectedCompanyId] = useState('');
+  const [selectedCompanyId, setSelectedCompanyId] = useState(urlCompanyId || '');
   const [companyAssessments, setCompanyAssessments] = useState([]);
-  const [selectedAssessmentId, setSelectedAssessmentId] = useState(getActiveAssessmentId);
+  const [selectedAssessmentId, setSelectedAssessmentId] = useState(urlAssessmentId || getActiveAssessmentId);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -66,11 +69,17 @@ export function DashboardPage() {
         if (!isMounted) return;
         setCompanies(comps);
         if (comps && comps.length > 0) {
-          const defaultComp = comps[0].id || comps[0].ID;
+          const matchedUrlComp = urlCompanyId && comps.find(c => (c.id || c.ID) === urlCompanyId);
+          const activeStoredCompId = getActiveCompanyId();
+          const matchedActiveComp = comps.find(c => (c.id || c.ID) === activeStoredCompId);
+          const defaultComp = matchedUrlComp
+            ? (matchedUrlComp.id || matchedUrlComp.ID)
+            : (urlCompanyId || (matchedActiveComp ? (matchedActiveComp.id || matchedActiveComp.ID) : (comps[0].id || comps[0].ID)));
           setSelectedCompanyId(defaultComp);
+          setActiveCompanyId(defaultComp);
         } else {
           // If no companies found, try active assessment directly or stop loading immediately
-          const activeId = getActiveAssessmentId();
+          const activeId = urlAssessmentId || getActiveAssessmentId();
           if (activeId) {
             setSelectedAssessmentId(activeId);
           } else {
@@ -84,6 +93,7 @@ export function DashboardPage() {
     }
     initFilters();
     return () => { isMounted = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // When selected company changes, load company assessments
@@ -96,17 +106,22 @@ export function DashboardPage() {
         const list = await assessmentService.getAssessments(selectedCompanyId);
         if (!isMounted) return;
         setCompanyAssessments(list || []);
-        const currentActive = getActiveAssessmentId();
+        const targetAssessmentId = urlAssessmentId || getActiveAssessmentId();
         if (list && list.length > 0) {
-          const match = list.find(a => (a.id || a.ID) === currentActive);
+          const match = targetAssessmentId ? list.find(a => (a.id || a.ID) === targetAssessmentId) : null;
           const chosen = match ? (match.id || match.ID) : (list[0].id || list[0].ID);
           setSelectedAssessmentId(chosen);
           setActiveAssessmentId(chosen);
         } else {
-          // No assessments found for company -> clean exit from loading skeleton
-          setSelectedAssessmentId('');
-          setMetrics(null);
-          setLoading(false);
+          // If no assessments found under company list, but urlAssessmentId is given, fall back to it
+          if (urlAssessmentId) {
+            setSelectedAssessmentId(urlAssessmentId);
+            setActiveAssessmentId(urlAssessmentId);
+          } else {
+            setSelectedAssessmentId('');
+            setMetrics(null);
+            setLoading(false);
+          }
         }
       } catch (err) {
         console.warn('Failed to load assessments for company:', err);
@@ -119,7 +134,7 @@ export function DashboardPage() {
     }
     loadAssessments();
     return () => { isMounted = false; };
-  }, [selectedCompanyId]);
+  }, [selectedCompanyId, urlAssessmentId]);
 
   // Load telemetry data whenever the active assessment changes
   const loadData = useCallback(async (overrideId) => {
@@ -344,7 +359,7 @@ export function DashboardPage() {
             </div>
           )}
 
-          {companyAssessments.length > 1 && (
+          {companyAssessments.length > 0 && (
             <div className="flex items-center gap-1.5 bg-white border border-[#DCE5EA] rounded-lg px-2.5 py-1 text-xs">
               <span className="text-[#718096] text-[11px]">Assessment:</span>
               <select
