@@ -127,7 +127,8 @@ export const assessmentService = {
 
     const found = getStoredAssessments().find(a => a.ID === id || a.id === id);
     if (found) return found;
-    return referenceCase.assessment;
+    if (id === 'assessment-ref-case') return referenceCase.assessment;
+    return null;
   },
 
   async saveAssessment(payload) {
