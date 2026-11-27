@@ -26,7 +26,7 @@ function saveStoredUsers(users) {
 
 function normalizeUser(rawUser, metadata = {}) {
   if (!rawUser) return null;
-  const meta = rawUser.user_metadata || metadata || {};
+  const meta = { ...(rawUser.user_metadata || {}), ...(metadata || {}) };
   const email = rawUser.email || meta.email || '';
   const fullName = meta.full_name || meta.fullName || rawUser.fullName || email.split('@')[0];
   const role = meta.role || rawUser.role || 'Viewer';
@@ -84,14 +84,27 @@ export const authService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           // Fetch profile details
-          const { data: profile } = await supabase
-            .from('profiles').select('*').eq('id', user.id).maybeSingle();
+          let profile = null;
+          try {
+            const { data: prof } = await supabase
+              .from('profiles').select('*').eq('id', user.id).maybeSingle();
+            profile = prof;
+          } catch {
+            // Profile query failed or blocked by RLS
+          }
 
-          const normalized = normalizeUser(user, profile ? {
+          // Construct fallback profile object from session.user with company_id: 'comp-apex-global' if profiles row is null
+          const profileMeta = profile ? {
             full_name: profile.full_name,
             role: profile.role,
             company_id: profile.company_id
-          } : undefined);
+          } : {
+            full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0],
+            role: user.user_metadata?.role || 'Viewer',
+            company_id: user.user_metadata?.company_id || 'comp-apex-global'
+          };
+
+          const normalized = normalizeUser(user, profileMeta);
 
           if (normalized) {
             if (typeof window !== 'undefined') {
@@ -146,11 +159,16 @@ export const authService = {
         } catch {
           // ignore profile fetch fallback
         }
-        const user = normalizeUser(data.user, profile ? {
+        const profileMeta = profile ? {
           full_name: profile.full_name,
           role: profile.role,
           company_id: profile.company_id
-        } : undefined);
+        } : {
+          full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email?.split('@')[0],
+          role: data.user.user_metadata?.role || 'Viewer',
+          company_id: data.user.user_metadata?.company_id || 'comp-apex-global'
+        };
+        const user = normalizeUser(data.user, profileMeta);
         if (typeof window !== 'undefined') {
           localStorage.removeItem('saas_auth_logged_out');
           localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
@@ -346,11 +364,16 @@ export const authService = {
           } catch {
             // fallback
           }
-          const user = normalizeUser(session.user, profile ? {
+          const profileMeta = profile ? {
             full_name: profile.full_name,
             role: profile.role,
             company_id: profile.company_id
-          } : undefined);
+          } : {
+            full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0],
+            role: session.user.user_metadata?.role || 'Viewer',
+            company_id: session.user.user_metadata?.company_id || 'comp-apex-global'
+          };
+          const user = normalizeUser(session.user, profileMeta);
           if (typeof window !== 'undefined') {
             localStorage.removeItem('saas_auth_logged_out');
             localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));

@@ -4,6 +4,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from '../app/ProtectedRoute';
 import { authService } from '../services/authService';
+import { supabase } from '../lib/supabase';
+import * as supabaseModule from '../lib/supabase';
 import { getActiveCompanyId, setActiveCompanyId } from '../lib/activeAssessment';
 
 // Stubs for JSDOM
@@ -99,5 +101,42 @@ describe('Live Auth & Protected Route Routing', () => {
 
     expect(localStorage.getItem('saas_current_user')).toBeNull();
     expect(localStorage.getItem('saas_auth_logged_out')).toBe('true');
+  });
+
+  it('in live mode, constructs authenticated user from session metadata when profiles query returns null', async () => {
+    vi.spyOn(supabaseModule, 'shouldUseMocks').mockReturnValue(false);
+
+    vi.spyOn(supabase.auth, 'getUser').mockResolvedValue({
+      data: {
+        user: {
+          id: 'usr-live-789',
+          email: 'admin@nirnay.app',
+          user_metadata: {
+            full_name: 'Ladu Gopal',
+            role: 'Admin'
+          }
+        }
+      },
+      error: null
+    });
+
+    vi.spyOn(supabase, 'from').mockReturnValue({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: () => Promise.resolve({ data: null, error: null })
+        })
+      })
+    });
+
+    const user = await authService.getCurrentUser();
+
+    expect(user).not.toBeNull();
+    expect(user.fullName).toBe('Ladu Gopal');
+    expect(user.email).toBe('admin@nirnay.app');
+    expect(user.role).toBe('Admin');
+    expect(user.company_id).toBe('comp-apex-global');
+    // Ensure it did not fall back to Alex Morgan or default mock user
+    expect(user.fullName).not.toBe('Alex Morgan');
+    expect(user.email).not.toBe('alex@company.com');
   });
 });

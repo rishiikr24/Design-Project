@@ -1,13 +1,50 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Menu, LogOut } from 'lucide-react';
 import { authService } from '../services/authService';
+import { shouldUseMocks } from '../lib/supabase';
 import { useToast } from '../components/Toast';
+
+function getInitials(name, email) {
+  if (name) {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  }
+  if (email) {
+    return email.slice(0, 2).toUpperCase();
+  }
+  return 'U';
+}
 
 export function Topbar({ onToggleSidebar }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const [currentUser, setCurrentUser] = useState(null);
+  const isMockMode = shouldUseMocks();
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadUser() {
+      const u = await authService.getCurrentUser();
+      if (isMounted) setCurrentUser(u);
+    }
+    loadUser();
+
+    const handleUserChanged = (e) => {
+      if (isMounted) setCurrentUser(e.detail);
+    };
+    window.addEventListener('saas:user_changed', handleUserChanged);
+    window.addEventListener('saas:role_changed', handleUserChanged);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('saas:user_changed', handleUserChanged);
+      window.removeEventListener('saas:role_changed', handleUserChanged);
+    };
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -34,6 +71,9 @@ export function Topbar({ onToggleSidebar }) {
     return 'Workspace';
   };
 
+  const userInitials = getInitials(currentUser?.fullName, currentUser?.email);
+  const userDisplayName = currentUser?.fullName || currentUser?.email || 'User';
+
   return (
     <header className="h-14 bg-white border-b border-[#DCE5EA] px-4 sm:px-6 flex items-center justify-between shrink-0 select-none z-10 min-w-0">
       {/* Left: Mobile Hamburger & Prototype Breadcrumb */}
@@ -54,18 +94,24 @@ export function Topbar({ onToggleSidebar }) {
         </div>
       </div>
 
-      {/* Right controls: Demo workspace pill & User Avatar */}
+      {/* Right controls: Workspace mode pill & Dynamic User Avatar */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-[#F4F7FA] text-[#718096] border border-[#DCE5EA]">
-          Demo workspace
-        </span>
+        {isMockMode ? (
+          <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-[#F4F7FA] text-[#718096] border border-[#DCE5EA]">
+            Demo workspace
+          </span>
+        ) : (
+          <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            Live workspace
+          </span>
+        )}
 
         <button
           onClick={() => navigate('/settings')}
           className="w-7 h-7 rounded-full bg-[#247C78]/15 border border-[#247C78]/30 text-[#247C78] text-[11px] font-bold flex items-center justify-center hover:opacity-80 transition-opacity shrink-0"
-          title="Account profile"
+          title={`Account profile (${userDisplayName})`}
         >
-          AM
+          {userInitials}
         </button>
 
         <button

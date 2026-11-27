@@ -583,7 +583,7 @@ export function CompanyPage() {
             <input
               type="text"
               required
-              placeholder="e.g. Alex Morgan"
+              placeholder="e.g. Jane Doe"
               value={inviteForm.fullName}
               onChange={(e) => setInviteForm({ ...inviteForm, fullName: e.target.value })}
               className="w-full bg-white border border-[#DCE5EA] rounded-xl p-2.5 text-[#263746] focus:outline-none focus:border-[#247C78]"
