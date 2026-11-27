@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import {
   Building,
   Layers,
@@ -18,11 +19,12 @@ import {
 import { Button } from '../../components/Button';
 import { Modal } from '../../components/Modal';
 import { assessmentService } from '../../services/assessmentService';
+import { companyService } from '../../services/companyService';
 import { calculateReadiness } from '../../lib/readiness';
 import { validateWeights, DEFAULT_WEIGHTS } from '../../lib/scoring';
 import { formatCurrency, formatNumber } from '../../lib/utils';
 import { useToast } from '../../components/Toast';
-import { getActiveAssessmentId, setActiveAssessmentId } from '../../lib/activeAssessment';
+import { getActiveAssessmentId, setActiveAssessmentId, setActiveCompanyId } from '../../lib/activeAssessment';
 import {
   ASSESSMENT_DIMENSIONS,
   ANSWER_CHOICES,
@@ -30,6 +32,9 @@ import {
 } from '../../data/assessmentQuestions';
 
 export function AssessmentPage() {
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   // Step 0: Overview / Intro, Step 1: Profile & Scale, Step 2: 5-Dimension Readiness Questionnaire, Step 3: Legacy Systems, Step 4: Criteria Weights, Step 5: TOE Results & Recommendations
   const [step, setStep] = useState(1);
   const [activeDimensionIndex, setActiveDimensionIndex] = useState(0);
@@ -37,6 +42,7 @@ export function AssessmentPage() {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAddLegacyModalOpen, setIsAddLegacyModalOpen] = useState(false);
+  const [companies, setCompanies] = useState([]);
   const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -74,6 +80,18 @@ export function AssessmentPage() {
   useEffect(() => {
     async function loadInitial() {
       try {
+        const targetCompanyId = searchParams.get('companyId') || location.state?.companyId;
+
+        // Load available companies for enterprise binding
+        let compsList = [];
+        try {
+          const compsRes = await companyService.getCompanies();
+          compsList = Array.isArray(compsRes) ? compsRes : (compsRes?.companies || []);
+          setCompanies(compsList);
+        } catch {
+          // ignore company list load error
+        }
+
         // First check local draft
         const draft = localStorage.getItem('saas_assessment_draft');
         if (draft) {
@@ -107,6 +125,29 @@ export function AssessmentPage() {
               weights: { ...DEFAULT_WEIGHTS },
               answers: { ...DEFAULT_QUESTION_ANSWERS }
             }));
+          }
+        }
+
+        // If targetCompanyId is specified via query params or navigation state, override with that company
+        if (targetCompanyId) {
+          const matched = compsList.find(c => (c.id || c.ID) === targetCompanyId);
+          if (matched) {
+            setFormData(prev => ({
+              ...prev,
+              company_ID: matched.id || matched.ID,
+              companyName: matched.name,
+              employees: matched.employees || prev.employees,
+              itBudget: matched.itBudget || prev.itBudget,
+              industry: matched.industry || prev.industry,
+              region: matched.region || prev.region
+            }));
+            setActiveCompanyId(matched.id || matched.ID);
+          } else {
+            setFormData(prev => ({
+              ...prev,
+              company_ID: targetCompanyId
+            }));
+            setActiveCompanyId(targetCompanyId);
           }
         }
       } catch (err) {
@@ -266,20 +307,22 @@ export function AssessmentPage() {
 
     try {
       const assessmentId = formData.id || formData.ID || `assessment-${Date.now()}`;
+      const savedCompanyId = formData.company_ID || formData.company_id || 'comp-apex-global';
       const saved = await assessmentService.saveAssessment({
         ...formData,
         ID: assessmentId,
-        id: assessmentId
+        id: assessmentId,
+        company_ID: savedCompanyId,
+        company_id: savedCompanyId
       });
-      setActiveAssessmentId(saved.id || saved.ID);
-      if (saved._syncError) {
-        showToast(`Not saved to database: ${saved._syncError}. Saved locally, not synced.`, 'warning');
-      } else {
-        showToast(`Assessment submitted! TOE Score: ${saved.readinessScore}/100`, 'success');
-      }
+      const savedAssessmentId = saved.id || saved.ID;
+      setActiveAssessmentId(savedAssessmentId);
+      setActiveCompanyId(savedCompanyId);
+
       localStorage.removeItem('saas_assessment_draft');
       window.dispatchEvent(new CustomEvent('saas:data_refreshed'));
-      setStep(5);
+      showToast('Assessment submitted — loading dashboard results...', 'success');
+      navigate(`/dashboard?companyId=${encodeURIComponent(savedCompanyId)}&assessmentId=${encodeURIComponent(savedAssessmentId)}`);
     } catch (err) {
       showToast(`Error saving assessment: ${err.message}`, 'danger');
     } finally {
@@ -423,6 +466,41 @@ export function AssessmentPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-5">
+                  {companies.length > 0 && (
+                    <div>
+                      <label className="block text-xs font-semibold text-[#263746] mb-1.5">
+                        Target Organization Profile *
+                      </label>
+                      <select
+                        value={formData.company_ID}
+                        onChange={(e) => {
+                          const selectedId = e.target.value;
+                          const comp = companies.find(c => (c.id || c.ID) === selectedId);
+                          setFormData(prev => ({
+                            ...prev,
+                            company_ID: selectedId,
+                            companyName: comp ? comp.name : prev.companyName,
+                            employees: comp?.employees || prev.employees,
+                            itBudget: comp?.itBudget || prev.itBudget,
+                            industry: comp?.industry || prev.industry,
+                            region: comp?.region || prev.region
+                          }));
+                          setActiveCompanyId(selectedId);
+                        }}
+                        className="w-full h-10 bg-white border border-[#DCE5EA] rounded-xl px-3 text-xs text-[#263746] focus:outline-none focus:ring-2 focus:ring-[#247C78]/20 focus:border-[#247C78] transition cursor-pointer"
+                      >
+                        {companies.map(c => (
+                          <option key={c.id || c.ID} value={c.id || c.ID}>
+                            {c.name} ({c.industry})
+                          </option>
+                        ))}
+                      </select>
+                      <span className="text-[11px] text-[#718096] mt-1 block">
+                        Enterprise account calibrated for this modernization assessment
+                      </span>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-xs font-semibold text-[#263746] mb-1.5">
                       Company Name *
