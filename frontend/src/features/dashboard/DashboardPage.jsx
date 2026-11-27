@@ -45,6 +45,7 @@ import { companyService } from '../../services/companyService';
 import { assessmentService } from '../../services/assessmentService';
 import { formatNumber, formatCurrency } from '../../lib/utils';
 import { useToast } from '../../components/Toast';
+import { getActiveAssessmentId, setActiveAssessmentId } from '../../lib/activeAssessment';
 
 export function DashboardPage() {
   const navigate = useNavigate();
@@ -52,7 +53,7 @@ export function DashboardPage() {
   const [companies, setCompanies] = useState([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
   const [companyAssessments, setCompanyAssessments] = useState([]);
-  const [selectedAssessmentId, setSelectedAssessmentId] = useState('');
+  const [selectedAssessmentId, setSelectedAssessmentId] = useState(getActiveAssessmentId);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -84,14 +85,18 @@ export function DashboardPage() {
       try {
         const list = await assessmentService.getAssessments(selectedCompanyId);
         setCompanyAssessments(list || []);
+        const currentActive = getActiveAssessmentId();
         if (list && list.length > 0) {
-          setSelectedAssessmentId(list[0].id || list[0].ID);
+          const match = list.find(a => (a.id || a.ID) === currentActive);
+          const chosen = match ? (match.id || match.ID) : (list[0].id || list[0].ID);
+          setSelectedAssessmentId(chosen);
+          setActiveAssessmentId(chosen);
         } else {
-          setSelectedAssessmentId('assessment-ref-case');
+          setSelectedAssessmentId(currentActive || 'assessment-ref-case');
         }
       } catch (err) {
         console.warn('Failed to load assessments for company:', err);
-        setSelectedAssessmentId('assessment-ref-case');
+        setSelectedAssessmentId(getActiveAssessmentId());
       }
     }
     loadAssessments();
@@ -102,7 +107,7 @@ export function DashboardPage() {
     setLoading(true);
     setError(null);
     try {
-      const activeId = selectedAssessmentId || 'assessment-ref-case';
+      const activeId = selectedAssessmentId || getActiveAssessmentId();
       const data = await dashboardService.getDashboardMetrics(activeId);
       if (!data || !data.assessment) {
         setMetrics(null);
@@ -314,7 +319,10 @@ export function DashboardPage() {
               <span className="text-[#718096] text-[11px]">Assessment:</span>
               <select
                 value={selectedAssessmentId}
-                onChange={(e) => setSelectedAssessmentId(e.target.value)}
+                onChange={(e) => {
+                  setSelectedAssessmentId(e.target.value);
+                  setActiveAssessmentId(e.target.value);
+                }}
                 className="bg-transparent text-[#263746] font-medium focus:outline-none cursor-pointer max-w-[150px] truncate"
               >
                 {companyAssessments.map((a) => (
@@ -543,6 +551,49 @@ export function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Post-Go-Live Telemetry Visualizer */}
+      {telemetryChartData.length > 0 && (
+        <div className="bg-white rounded-xl border border-[#DCE5EA] p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+            <div>
+              <h3 className="text-sm font-bold text-[#102B46]">Post-Go-Live Telemetry & Value Realization</h3>
+              <p className="text-xs text-[#718096]">
+                Target adoption velocity, cost efficiency dividends, and SaaS license utilization benchmarks
+              </p>
+            </div>
+            <span className="text-[11px] font-semibold text-[#718096] bg-[#F4F7FA] px-2.5 py-1 rounded-full border border-[#DCE5EA]">
+              Simulated reference values
+            </span>
+          </div>
+
+          <div className="h-56 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={telemetryChartData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                <XAxis dataKey="metric" stroke="#718096" fontSize={11} interval={0} />
+                <YAxis domain={[0, 100]} stroke="#718096" fontSize={11} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#DCE5EA', borderRadius: '0.5rem', fontSize: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                  formatter={(val) => [`${val}%`, 'Actual']}
+                />
+                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                  {telemetryChartData.map((entry, index) => (
+                    <Cell key={`cell-telemetry-${index}`} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex justify-around items-center pt-3 border-t border-[#DCE5EA] text-xs text-[#718096]">
+            {telemetryChartData.map((item) => (
+              <div key={item.metric} className="text-center">
+                <span className="block font-bold text-[#102B46]">{item.value}%</span>
+                <span className="text-[10px] text-[#718096]">{item.metric} (Benchmark: {item.benchmark}%)</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Secondary Row: Top SaaS Recommendation Spotlight & Evaluated Risks */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

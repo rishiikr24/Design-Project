@@ -21,6 +21,7 @@ import { Input, Select, Textarea } from '../../components/FormElements';
 import { plannerService } from '../../services/plannerService';
 import { formatNumber } from '../../lib/utils';
 import { useToast } from '../../components/Toast';
+import { getActiveAssessmentId } from '../../lib/activeAssessment';
 
 export function PlannerPage() {
   const [plan, setPlan] = useState(null);
@@ -55,7 +56,8 @@ export function PlannerPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await plannerService.getPlan({});
+      const activeId = getActiveAssessmentId();
+      const data = await plannerService.getPlan({ assessmentId: activeId });
       setPlan(data);
     } catch (err) {
       setError(err.message || 'Error generating roadmap');
@@ -78,7 +80,11 @@ export function PlannerPage() {
         overallProgress: result.overallProgress,
         phases: prev.phases.map((p) => (p.sequence === seq ? { ...p, ...updates } : p))
       }));
-      showToast(`Updated Phase ${seq} (${result.overallProgress}% overall)`, 'success');
+      if (result._syncError) {
+        showToast(`Not saved to database: ${result._syncError}. Saved locally, not synced.`, 'warning');
+      } else {
+        showToast(`Updated Phase ${seq} (${result.overallProgress}% overall)`, 'success');
+      }
       window.dispatchEvent(new CustomEvent('saas:data_refreshed'));
     } catch (err) {
       showToast(`Error updating phase: ${err.message}`, 'danger');

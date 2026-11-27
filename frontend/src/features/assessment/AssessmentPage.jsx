@@ -28,6 +28,7 @@ import { calculateReadiness } from '../../lib/readiness';
 import { validateWeights, DEFAULT_WEIGHTS } from '../../lib/scoring';
 import { formatCurrency, formatNumber } from '../../lib/utils';
 import { useToast } from '../../components/Toast';
+import { getActiveAssessmentId, setActiveAssessmentId } from '../../lib/activeAssessment';
 import {
   ASSESSMENT_DIMENSIONS,
   ANSWER_CHOICES,
@@ -94,7 +95,8 @@ export function AssessmentPage() {
             // fallback
           }
         } else {
-          const assessment = await assessmentService.getAssessmentById('assessment-ref-case');
+          const activeId = getActiveAssessmentId();
+          const assessment = await assessmentService.getAssessmentById(activeId);
           if (assessment) {
             setFormData(prev => ({
               ...prev,
@@ -269,11 +271,18 @@ export function AssessmentPage() {
     showToast('Saving assessment and executing TOE calculation...', 'info');
 
     try {
+      const assessmentId = formData.id || formData.ID || `assessment-${Date.now()}`;
       const saved = await assessmentService.saveAssessment({
-        ID: 'assessment-ref-case',
-        ...formData
+        ...formData,
+        ID: assessmentId,
+        id: assessmentId
       });
-      showToast(`Assessment submitted! TOE Score: ${saved.readinessScore}/100`, 'success');
+      setActiveAssessmentId(saved.id || saved.ID);
+      if (saved._syncError) {
+        showToast(`Not saved to database: ${saved._syncError}. Saved locally, not synced.`, 'warning');
+      } else {
+        showToast(`Assessment submitted! TOE Score: ${saved.readinessScore}/100`, 'success');
+      }
       localStorage.removeItem('saas_assessment_draft');
       window.dispatchEvent(new CustomEvent('saas:data_refreshed'));
       setStep(5);

@@ -18,4 +18,16 @@ describe("DashboardPage", () => {
     );
     expect(await screen.findByText("Executive Dashboard", {}, { timeout: 4000 })).toBeInTheDocument();
   });
+
+  it("renders the post-go-live telemetry chart with simulated reference values label", async () => {
+    render(
+      <MemoryRouter>
+        <ToastProvider>
+          <DashboardPage />
+        </ToastProvider>
+      </MemoryRouter>
+    );
+    expect(await screen.findByText("Post-Go-Live Telemetry & Value Realization", {}, { timeout: 4000 })).toBeInTheDocument();
+    expect(screen.getByText("Simulated reference values")).toBeInTheDocument();
+  });
 });

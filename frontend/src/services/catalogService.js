@@ -1,7 +1,27 @@
 import { supabase, shouldUseMocks } from '../lib/supabase';
 import initialProducts from '../data/products.json';
 
-let productsState = [...initialProducts];
+const PRODUCTS_KEY = 'saas_catalog_products_data';
+
+function getStoredProducts() {
+  if (typeof window === 'undefined') return initialProducts;
+  const saved = localStorage.getItem(PRODUCTS_KEY);
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch {
+      // fallback
+    }
+  }
+  return initialProducts;
+}
+
+function saveStoredProducts(products) {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
+  }
+}
 
 function mapProductFromPostgres(row) {
   if (!row) return null;
@@ -49,7 +69,7 @@ export const catalogService = {
       }
     }
 
-    return productsState.filter(p => p.status === 'Active');
+    return getStoredProducts().filter(p => p.status === 'Active');
   },
 
   async getAllProducts() {
@@ -68,7 +88,7 @@ export const catalogService = {
       }
     }
 
-    return productsState;
+    return getStoredProducts();
   },
 
   async getProductById(id) {
@@ -85,7 +105,7 @@ export const catalogService = {
       }
     }
 
-    return productsState.find(p => p.ID === id || p.id === id) || null;
+    return getStoredProducts().find(p => p.ID === id || p.id === id) || null;
   },
 
   async addProduct(product) {
@@ -132,17 +152,22 @@ export const catalogService = {
           .select()
           .single();
 
-        if (!error && data) {
+        if (error) {
+          newProduct._syncError = error.message;
+        } else if (data) {
           const mapped = mapProductFromPostgres(data);
-          productsState = [mapped, ...productsState];
+          const current = getStoredProducts();
+          saveStoredProducts([mapped, ...current.filter(p => (p.ID || p.id) !== mapped.id)]);
           return mapped;
         }
-      } catch {
-        // Fallback to local
+      } catch (err) {
+        newProduct._syncError = err.message;
       }
     }
 
-    productsState = [newProduct, ...productsState];
+    const current = getStoredProducts();
+    const updated = [newProduct, ...current.filter(p => (p.ID || p.id) !== newProduct.id)];
+    saveStoredProducts(updated);
     return newProduct;
   },
 
@@ -166,8 +191,12 @@ export const catalogService = {
 
         if (!error && data) {
           const mapped = mapProductFromPostgres(data);
-          const idx = productsState.findIndex(p => p.ID === id || p.id === id);
-          if (idx !== -1) productsState[idx] = mapped;
+          const current = getStoredProducts();
+          const idx = current.findIndex(p => p.ID === id || p.id === id);
+          if (idx !== -1) {
+            current[idx] = mapped;
+            saveStoredProducts(current);
+          }
           return mapped;
         }
       } catch {
@@ -175,10 +204,12 @@ export const catalogService = {
       }
     }
 
-    const idx = productsState.findIndex(p => p.ID === id || p.id === id);
+    const products = getStoredProducts();
+    const idx = products.findIndex(p => p.ID === id || p.id === id);
     if (idx === -1) throw new Error(`Product ${id} not found`);
-    productsState[idx] = { ...productsState[idx], ...updates };
-    return productsState[idx];
+    products[idx] = { ...products[idx], ...updates };
+    saveStoredProducts(products);
+    return products[idx];
   },
 
   async retireProduct(id) {

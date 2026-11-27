@@ -2,9 +2,10 @@ import { supabase, shouldUseMocks } from '../lib/supabase';
 import { catalogService } from './catalogService';
 import { assessmentService } from './assessmentService';
 import { evaluateProducts, DEFAULT_WEIGHTS } from '../lib/scoring';
+import { getActiveAssessmentId } from '../lib/activeAssessment';
 
 export const recommendationService = {
-  async evaluate({ assessmentId = 'assessment-ref-case', weights = DEFAULT_WEIGHTS }) {
+  async evaluate({ assessmentId = getActiveAssessmentId(), weights = DEFAULT_WEIGHTS } = {}) {
     const products = await catalogService.getProducts();
     const assessment = (await assessmentService.getAssessmentById(assessmentId)) || {};
 

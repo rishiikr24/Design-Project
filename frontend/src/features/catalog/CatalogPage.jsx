@@ -134,7 +134,11 @@ export function CatalogPage() {
     e.preventDefault();
     try {
       const created = await catalogService.addProduct(newProd);
-      showToast(`Added ${created.name} to catalog`, 'success');
+      if (created._syncError) {
+        showToast(`Not saved to database: ${created._syncError}. Saved locally, not synced.`, 'warning');
+      } else {
+        showToast(`Added ${created.name} to catalog`, 'success');
+      }
       setIsAddModalOpen(false);
       setNewProd({
         name: '',

@@ -3,8 +3,29 @@ import { assessmentService } from './assessmentService';
 import { catalogService } from './catalogService';
 import { riskService } from './riskService';
 import { generateMigrationPlan, calculateOverallProgress } from '../lib/planner';
+import { getActiveAssessmentId } from '../lib/activeAssessment';
 
 let planState = null;
+const PLAN_KEY = 'saas_planner_plan_data';
+
+function getStoredPlan(assessmentId = 'assessment-ref-case', productId = 'sap-cloud-erp') {
+  if (typeof window === 'undefined') return null;
+  const saved = localStorage.getItem(`${PLAN_KEY}_${assessmentId}_${productId}`);
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch {
+      // fallback
+    }
+  }
+  return null;
+}
+
+function saveStoredPlan(assessmentId, productId, plan) {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(`${PLAN_KEY}_${assessmentId}_${productId}`, JSON.stringify(plan));
+  }
+}
 
 function mapPlanFromPostgres(planRow, phases = []) {
   if (!planRow) return null;
@@ -35,8 +56,14 @@ function mapPlanFromPostgres(planRow, phases = []) {
 }
 
 export const plannerService = {
-  async getPlan({ assessmentId = 'assessment-ref-case', productId = 'sap-cloud-erp' }) {
-    if (planState && planState.selectedProductId === productId) {
+  async getPlan({ assessmentId = getActiveAssessmentId(), productId = 'sap-cloud-erp' } = {}) {
+    const stored = getStoredPlan(assessmentId, productId);
+    if (stored) {
+      planState = stored;
+      return planState;
+    }
+
+    if (planState && planState.selectedProductId === productId && (planState.assessmentId === assessmentId || planState.assessment_id === assessmentId)) {
       return planState;
     }
 
@@ -62,7 +89,11 @@ export const plannerService = {
     const product = await catalogService.getProductById(productId);
     const riskEval = await riskService.assessRisks(assessmentId);
 
-    planState = generateMigrationPlan(assessment, product, riskEval.risks);
+    planState = {
+      ...generateMigrationPlan(assessment, product, riskEval.risks),
+      assessmentId,
+      selectedProductId: productId
+    };
 
     if (!shouldUseMocks()) {
       try {
@@ -104,6 +135,7 @@ export const plannerService = {
       }
     }
 
+    saveStoredPlan(assessmentId, productId, planState);
     return planState;
   },
 
@@ -124,7 +156,7 @@ export const plannerService = {
       try {
         const planId = planState.ID || planState.id;
         if (planId) {
-          await supabase
+          const { error: phaseErr } = await supabase
             .from('migration_phases')
             .update({
               status: phase.status,
@@ -133,17 +165,25 @@ export const plannerService = {
             .eq('plan_id', planId)
             .eq('sequence', Number(phaseSequence));
 
-          await supabase
+          const { error: planErr } = await supabase
             .from('migration_plans')
             .update({
               overall_progress: planState.overallProgress
             })
             .eq('id', planId);
+
+          if (phaseErr || planErr) {
+            planState._syncError = (phaseErr || planErr).message;
+          } else {
+            delete planState._syncError;
+          }
         }
-      } catch {
-        // Continue with in-memory state
+      } catch (err) {
+        planState._syncError = err.message;
       }
     }
+
+    saveStoredPlan(planState.assessmentId || 'assessment-ref-case', planState.selectedProductId || 'sap-cloud-erp', planState);
 
     return {
       phase,
