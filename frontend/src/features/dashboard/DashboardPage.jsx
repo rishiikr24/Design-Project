@@ -62,8 +62,10 @@ export function DashboardPage() {
   useEffect(() => {
     async function initFilters() {
       try {
-        const comps = await companyService.getCompanies();
-        setCompanies(comps || []);
+        // getCompanies() resolves to { companies, users }, not an array
+        const res = await companyService.getCompanies();
+        const comps = Array.isArray(res) ? res : (res?.companies || []);
+        setCompanies(comps);
         if (comps && comps.length > 0) {
           const defaultComp = comps[0].id || comps[0].ID;
           setSelectedCompanyId(defaultComp);
