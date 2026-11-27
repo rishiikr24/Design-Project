@@ -4,9 +4,10 @@ import { recommendationService } from './recommendationService';
 import { riskService } from './riskService';
 import { plannerService } from './plannerService';
 import referenceCase from '../data/referenceCase.json';
+import { getActiveAssessmentId } from '../lib/activeAssessment';
 
 export const dashboardService = {
-  async getDashboardMetrics(assessmentId = 'assessment-ref-case') {
+  async getDashboardMetrics(assessmentId = getActiveAssessmentId()) {
     const assessment = await assessmentService.getAssessmentById(assessmentId);
     if (!assessment) {
       return null;

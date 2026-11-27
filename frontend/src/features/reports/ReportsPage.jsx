@@ -8,6 +8,7 @@ import { dashboardService } from '../../services/dashboardService';
 import { companyService } from '../../services/companyService';
 import { formatCurrency, formatNumber } from '../../lib/utils';
 import { useToast } from '../../components/Toast';
+import { getActiveAssessmentId } from '../../lib/activeAssessment';
 
 export function ReportsPage() {
   const [metrics, setMetrics] = useState(null);
@@ -17,7 +18,7 @@ export function ReportsPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const data = await dashboardService.getDashboardMetrics('assessment-ref-case');
+        const data = await dashboardService.getDashboardMetrics(getActiveAssessmentId());
         setMetrics(data);
       } catch (err) {
         showToast(`Failed to load report data: ${err.message}`, 'danger');

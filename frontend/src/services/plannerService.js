@@ -3,6 +3,7 @@ import { assessmentService } from './assessmentService';
 import { catalogService } from './catalogService';
 import { riskService } from './riskService';
 import { generateMigrationPlan, calculateOverallProgress } from '../lib/planner';
+import { getActiveAssessmentId } from '../lib/activeAssessment';
 
 let planState = null;
 const PLAN_KEY = 'saas_planner_plan_data';
@@ -55,7 +56,7 @@ function mapPlanFromPostgres(planRow, phases = []) {
 }
 
 export const plannerService = {
-  async getPlan({ assessmentId = 'assessment-ref-case', productId = 'sap-cloud-erp' }) {
+  async getPlan({ assessmentId = getActiveAssessmentId(), productId = 'sap-cloud-erp' } = {}) {
     const stored = getStoredPlan(assessmentId, productId);
     if (stored) {
       planState = stored;

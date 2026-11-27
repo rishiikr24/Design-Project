@@ -19,6 +19,7 @@ import { Input, Select, Textarea } from '../../components/FormElements';
 import { riskService } from '../../services/riskService';
 import { formatCurrency } from '../../lib/utils';
 import { useToast } from '../../components/Toast';
+import { getActiveAssessmentId } from '../../lib/activeAssessment';
 
 export function RiskPage() {
   const [riskData, setRiskData] = useState(null);
@@ -46,7 +47,8 @@ export function RiskPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await riskService.assessRisks('assessment-ref-case');
+      const activeId = getActiveAssessmentId();
+      const data = await riskService.assessRisks(activeId);
       setRiskData(data);
     } catch (err) {
       setError(err.message || 'Risk assessment calculation error');

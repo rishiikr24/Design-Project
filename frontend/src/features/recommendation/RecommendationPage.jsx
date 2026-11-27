@@ -10,6 +10,7 @@ import { catalogService } from '../../services/catalogService';
 import { DEFAULT_WEIGHTS, validateWeights } from '../../lib/scoring';
 import { formatNumber } from '../../lib/utils';
 import { useToast } from '../../components/Toast';
+import { getActiveAssessmentId } from '../../lib/activeAssessment';
 
 export function RecommendationPage() {
   const [results, setResults] = useState([]);
@@ -23,7 +24,7 @@ export function RecommendationPage() {
   const runEvaluation = async (customWeights = weights) => {
     try {
       const data = await recommendationService.evaluate({
-        assessmentId: 'assessment-ref-case',
+        assessmentId: getActiveAssessmentId(),
         weights: customWeights
       });
       setResults(data.results || []);

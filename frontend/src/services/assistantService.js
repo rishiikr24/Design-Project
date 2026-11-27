@@ -1,9 +1,10 @@
 import { supabase, shouldUseMocks } from '../lib/supabase';
 import { dashboardService } from './dashboardService';
 import { answerQuestion } from '../lib/assistant';
+import { getActiveAssessmentId } from '../lib/activeAssessment';
 
 export const assistantService = {
-  async askQuestion(question, assessmentId = 'assessment-ref-case') {
+  async askQuestion(question, assessmentId = getActiveAssessmentId()) {
     const dashboard = await dashboardService.getDashboardMetrics(assessmentId);
     const context = {
       assessment: dashboard.assessment,

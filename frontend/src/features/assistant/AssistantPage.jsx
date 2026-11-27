@@ -21,6 +21,7 @@ import { Badge } from '../../components/Badge';
 import { assistantService } from '../../services/assistantService';
 import { dashboardService } from '../../services/dashboardService';
 import { useToast } from '../../components/Toast';
+import { getActiveAssessmentId } from '../../lib/activeAssessment';
 
 export function AssistantPage() {
   const [messages, setMessages] = useState([
@@ -65,7 +66,7 @@ export function AssistantPage() {
   useEffect(() => {
     async function fetchTelemetry() {
       try {
-        const data = await dashboardService.getDashboardMetrics('assessment-ref-case');
+        const data = await dashboardService.getDashboardMetrics(getActiveAssessmentId());
         setTelemetry(data);
       } catch (err) {
         console.warn('Telemetry load error:', err);
@@ -98,7 +99,7 @@ export function AssistantPage() {
     setLoading(true);
 
     try {
-      const response = await assistantService.askQuestion(q, 'assessment-ref-case');
+      const response = await assistantService.askQuestion(q, getActiveAssessmentId());
       const assistantMsg = {
         id: Date.now() + 1,
         sender: 'assistant',

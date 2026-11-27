@@ -2,6 +2,7 @@ import { supabase, shouldUseMocks } from '../lib/supabase';
 import riskTemplates from '../data/riskTemplates.json';
 import { assessmentService } from './assessmentService';
 import { assessRisks } from '../lib/risk';
+import { getActiveAssessmentId } from '../lib/activeAssessment';
 
 function mapTemplateFromPostgres(row) {
   if (!row) return null;
@@ -36,7 +37,7 @@ export const riskService = {
     return riskTemplates;
   },
 
-  async assessRisks(assessmentId = 'assessment-ref-case') {
+  async assessRisks(assessmentId = getActiveAssessmentId()) {
     const templates = await this.getTemplates();
     const assessment = (await assessmentService.getAssessmentById(assessmentId)) || {};
     const assessmentContext = {

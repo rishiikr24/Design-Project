@@ -45,6 +45,7 @@ import { companyService } from '../../services/companyService';
 import { assessmentService } from '../../services/assessmentService';
 import { formatNumber, formatCurrency } from '../../lib/utils';
 import { useToast } from '../../components/Toast';
+import { getActiveAssessmentId, setActiveAssessmentId } from '../../lib/activeAssessment';
 
 export function DashboardPage() {
   const navigate = useNavigate();
@@ -52,7 +53,7 @@ export function DashboardPage() {
   const [companies, setCompanies] = useState([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
   const [companyAssessments, setCompanyAssessments] = useState([]);
-  const [selectedAssessmentId, setSelectedAssessmentId] = useState('');
+  const [selectedAssessmentId, setSelectedAssessmentId] = useState(getActiveAssessmentId);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -84,14 +85,18 @@ export function DashboardPage() {
       try {
         const list = await assessmentService.getAssessments(selectedCompanyId);
         setCompanyAssessments(list || []);
+        const currentActive = getActiveAssessmentId();
         if (list && list.length > 0) {
-          setSelectedAssessmentId(list[0].id || list[0].ID);
+          const match = list.find(a => (a.id || a.ID) === currentActive);
+          const chosen = match ? (match.id || match.ID) : (list[0].id || list[0].ID);
+          setSelectedAssessmentId(chosen);
+          setActiveAssessmentId(chosen);
         } else {
-          setSelectedAssessmentId('assessment-ref-case');
+          setSelectedAssessmentId(currentActive || 'assessment-ref-case');
         }
       } catch (err) {
         console.warn('Failed to load assessments for company:', err);
-        setSelectedAssessmentId('assessment-ref-case');
+        setSelectedAssessmentId(getActiveAssessmentId());
       }
     }
     loadAssessments();
@@ -102,7 +107,7 @@ export function DashboardPage() {
     setLoading(true);
     setError(null);
     try {
-      const activeId = selectedAssessmentId || 'assessment-ref-case';
+      const activeId = selectedAssessmentId || getActiveAssessmentId();
       const data = await dashboardService.getDashboardMetrics(activeId);
       if (!data || !data.assessment) {
         setMetrics(null);
@@ -314,7 +319,10 @@ export function DashboardPage() {
               <span className="text-[#718096] text-[11px]">Assessment:</span>
               <select
                 value={selectedAssessmentId}
-                onChange={(e) => setSelectedAssessmentId(e.target.value)}
+                onChange={(e) => {
+                  setSelectedAssessmentId(e.target.value);
+                  setActiveAssessmentId(e.target.value);
+                }}
                 className="bg-transparent text-[#263746] font-medium focus:outline-none cursor-pointer max-w-[150px] truncate"
               >
                 {companyAssessments.map((a) => (
