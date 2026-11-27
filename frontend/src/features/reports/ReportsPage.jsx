@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FileText, Printer, Download, Calendar, Building2, Award, TrendingUp, Layers, CheckCircle2 } from 'lucide-react';
 import { PageHeader } from '../../components/PageHeader';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/Card';
@@ -11,6 +12,7 @@ import { useToast } from '../../components/Toast';
 import { getActiveAssessmentId } from '../../lib/activeAssessment';
 
 export function ReportsPage() {
+  const navigate = useNavigate();
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const { showToast } = useToast();
@@ -34,6 +36,25 @@ export function ReportsPage() {
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
         <div className="animate-spin rounded-xl h-9 w-9 border-2 border-[#247C78] border-t-transparent"></div>
         <p className="text-xs text-[#718096]">Compiling executive transformation report...</p>
+      </div>
+    );
+  }
+
+  if (!metrics || !metrics.assessment) {
+    return (
+      <div className="max-w-lg mx-auto my-16 p-8 rounded-2xl bg-white border border-[#DCE5EA] shadow-sm text-center space-y-4">
+        <div className="w-12 h-12 rounded-xl bg-[#F4F7FA] border border-[#DCE5EA] flex items-center justify-center text-[#718096] mx-auto">
+          <FileText className="w-6 h-6" />
+        </div>
+        <div>
+          <h3 className="text-base font-bold text-[#102B46]">No Active Assessment Data</h3>
+          <p className="text-xs text-[#718096] mt-1">
+            Complete the Enterprise Readiness Assessment wizard to compile executive transformation briefing reports, risk calculations, and recommendation summaries.
+          </p>
+        </div>
+        <Button variant="primary" size="sm" onClick={() => navigate('/assessment')}>
+          <span>Open Assessment Wizard</span>
+        </Button>
       </div>
     );
   }
