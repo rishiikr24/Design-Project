@@ -1,23 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Bot,
   User,
   Send,
   Sparkles,
   Trash2,
-  HelpCircle,
-  Lightbulb,
   Info,
-  CheckCircle2,
   ArrowRight,
   TrendingUp,
   ShieldAlert,
   Layers,
   DollarSign
 } from 'lucide-react';
-import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
-import { Badge } from '../../components/Badge';
 import { assistantService } from '../../services/assistantService';
 import { dashboardService } from '../../services/dashboardService';
 import { useToast } from '../../components/Toast';

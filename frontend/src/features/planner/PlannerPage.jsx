@@ -1,18 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   RefreshCw,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  Layers,
-  ArrowRight,
   Plus,
   Trash2,
   Edit2,
-  User,
   AlertCircle
 } from 'lucide-react';
-import { Card, CardTitle, CardContent } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Badge } from '../../components/Badge';
 import { PageHeader } from '../../components/PageHeader';

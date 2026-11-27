@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
-import { Settings as SettingsIcon, Save, Database, Shield, Bell, Sliders, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
+import { Save, Database, Bell, Sliders, RefreshCw } from 'lucide-react';
 import { PageHeader } from '../../components/PageHeader';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Badge } from '../../components/Badge';
-import { Input, Select } from '../../components/FormElements';
 import { DEFAULT_WEIGHTS } from '../../lib/scoring';
 import { shouldUseMocks } from '../../lib/supabase';
 import { useToast } from '../../components/Toast';

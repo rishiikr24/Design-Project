@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { assessmentService } from "../services/assessmentService";
 import { companyService } from "../services/companyService";
 import { catalogService } from "../services/catalogService";
-import { plannerService } from "../services/plannerService";
 import { supabase } from "../lib/supabase";
 
 // Stub window APIs if needed

@@ -26,10 +26,10 @@ function saveStoredUsers(users) {
 
 function normalizeUser(rawUser, metadata = {}) {
   if (!rawUser) return null;
-  const meta = rawUser.user_metadata || metadata || {};
+  const meta = { ...(rawUser.user_metadata || {}), ...(metadata || {}) };
   const email = rawUser.email || meta.email || '';
   const fullName = meta.full_name || meta.fullName || rawUser.fullName || email.split('@')[0];
-  const role = meta.role || rawUser.role || 'Viewer';
+  const role = meta.role || rawUser.role || 'admin';
   const companyId = meta.company_id || meta.company_ID || rawUser.company_ID || rawUser.company_id || 'comp-apex-global';
   const id = rawUser.id || rawUser.ID || `usr-${Date.now()}`;
 
@@ -84,24 +84,39 @@ export const authService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           // Fetch profile details
-          const { data: profile } = await supabase
-            .from('profiles').select('*').eq('id', user.id).maybeSingle();
+          let profile = null;
+          try {
+            const { data: prof } = await supabase
+              .from('profiles').select('*').eq('id', user.id).maybeSingle();
+            profile = prof;
+          } catch {
+            // Profile query failed or blocked by RLS
+          }
 
-          const normalized = normalizeUser(user, profile ? {
+          // Construct fallback profile object from session.user with company_id: 'comp-apex-global' if profiles row is null
+          const profileMeta = profile ? {
             full_name: profile.full_name,
             role: profile.role,
             company_id: profile.company_id
-          } : undefined);
+          } : {
+            full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0],
+            role: user.user_metadata?.role || 'admin',
+            company_id: user.user_metadata?.company_id || 'comp-apex-global'
+          };
+
+          const normalized = normalizeUser(user, profileMeta);
 
           if (normalized) {
             if (typeof window !== 'undefined') {
+              localStorage.removeItem('saas_auth_logged_out');
               localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(normalized));
             }
             return normalized;
           }
         }
+        return null;
       } catch {
-        // Fallback to storage
+        return null;
       }
     }
 
@@ -109,7 +124,18 @@ export const authService = {
       return null;
     }
 
-    // Default fallback user so development and assessment exploration proceeds without login gate
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(CURRENT_USER_KEY);
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch {
+          // ignore corrupted JSON
+        }
+      }
+    }
+
+    // Default fallback user in mock mode
     return DEFAULT_USER;
   },
 
@@ -135,14 +161,21 @@ export const authService = {
         } catch {
           // ignore profile fetch fallback
         }
-        const user = normalizeUser(data.user, profile ? {
+        const profileMeta = profile ? {
           full_name: profile.full_name,
           role: profile.role,
           company_id: profile.company_id
-        } : undefined);
+        } : {
+          full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email?.split('@')[0],
+          role: data.user.user_metadata?.role || 'admin',
+          company_id: data.user.user_metadata?.company_id || 'comp-apex-global'
+        };
+        const user = normalizeUser(data.user, profileMeta);
         if (typeof window !== 'undefined') {
+          localStorage.removeItem('saas_auth_logged_out');
           localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
           window.dispatchEvent(new CustomEvent('saas:role_changed', { detail: user }));
+          window.dispatchEvent(new CustomEvent('saas:user_changed', { detail: user }));
         }
         return user;
       }
@@ -192,12 +225,26 @@ export const authService = {
         throw new Error(error.message);
       }
       if (data?.user) {
-        const newUser = normalizeUser(data.user, { full_name: fullName, role, company_id: company_ID });
+        let profile = null;
+        try {
+          const { data: prof } = await supabase
+            .from('profiles').select('*').eq('id', data.user.id).maybeSingle();
+          profile = prof;
+        } catch {
+          // fallback
+        }
+        const newUser = normalizeUser(data.user, profile ? {
+          full_name: profile.full_name,
+          role: profile.role,
+          company_id: profile.company_id
+        } : { full_name: fullName, role, company_id: company_ID });
         const updatedUsers = [...users, newUser];
         saveStoredUsers(updatedUsers);
         if (typeof window !== 'undefined') {
+          localStorage.removeItem('saas_auth_logged_out');
           localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(newUser));
           window.dispatchEvent(new CustomEvent('saas:role_changed', { detail: newUser }));
+          window.dispatchEvent(new CustomEvent('saas:user_changed', { detail: newUser }));
         }
         return newUser;
       }
@@ -309,9 +356,37 @@ export const authService = {
 
   onAuthStateChange(callback) {
     if (!shouldUseMocks()) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        const user = session?.user ? normalizeUser(session.user) : null;
-        callback(event, user);
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (session?.user) {
+          let profile = null;
+          try {
+            const { data: prof } = await supabase
+              .from('profiles').select('*').eq('id', session.user.id).maybeSingle();
+            profile = prof;
+          } catch {
+            // fallback
+          }
+          const profileMeta = profile ? {
+            full_name: profile.full_name,
+            role: profile.role,
+            company_id: profile.company_id
+          } : {
+            full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0],
+            role: session.user.user_metadata?.role || 'admin',
+            company_id: session.user.user_metadata?.company_id || 'comp-apex-global'
+          };
+          const user = normalizeUser(session.user, profileMeta);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('saas_auth_logged_out');
+            localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+          }
+          callback(event, user);
+        } else {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem(CURRENT_USER_KEY);
+          }
+          callback(event, null);
+        }
       });
       return () => subscription.unsubscribe();
     }
@@ -321,10 +396,12 @@ export const authService = {
     };
     if (typeof window !== 'undefined') {
       window.addEventListener('saas:role_changed', listener);
+      window.addEventListener('saas:user_changed', listener);
     }
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('saas:role_changed', listener);
+        window.removeEventListener('saas:user_changed', listener);
       }
     };
   }

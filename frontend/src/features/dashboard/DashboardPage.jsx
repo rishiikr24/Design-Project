@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   RefreshCw,
@@ -18,9 +18,7 @@ import {
   ExternalLink,
   ChevronRight,
   Building2,
-  CheckCircle2,
-  CheckCircle,
-  HelpCircle
+  CheckCircle2
 } from 'lucide-react';
 import {
   BarChart,
@@ -36,8 +34,6 @@ import {
   PolarRadiusAxis,
   Radar
 } from 'recharts';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../../components/Card';
-import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
 import { Modal } from '../../components/Modal';
 import { dashboardService } from '../../services/dashboardService';
@@ -61,29 +57,44 @@ export function DashboardPage() {
 
   // Load companies for the enterprise filter
   useEffect(() => {
+    let isMounted = true;
     async function initFilters() {
       try {
         // getCompanies() resolves to { companies, users }, not an array
         const res = await companyService.getCompanies();
         const comps = Array.isArray(res) ? res : (res?.companies || []);
+        if (!isMounted) return;
         setCompanies(comps);
         if (comps && comps.length > 0) {
           const defaultComp = comps[0].id || comps[0].ID;
           setSelectedCompanyId(defaultComp);
+        } else {
+          // If no companies found, try active assessment directly or stop loading immediately
+          const activeId = getActiveAssessmentId();
+          if (activeId) {
+            setSelectedAssessmentId(activeId);
+          } else {
+            setLoading(false);
+          }
         }
       } catch (err) {
         console.warn('Failed to load companies for filter:', err);
+        if (isMounted) setLoading(false);
       }
     }
     initFilters();
+    return () => { isMounted = false; };
   }, []);
 
   // When selected company changes, load company assessments
   useEffect(() => {
+    if (!selectedCompanyId) return;
+    let isMounted = true;
+
     async function loadAssessments() {
-      if (!selectedCompanyId) return;
       try {
         const list = await assessmentService.getAssessments(selectedCompanyId);
+        if (!isMounted) return;
         setCompanyAssessments(list || []);
         const currentActive = getActiveAssessmentId();
         if (list && list.length > 0) {
@@ -92,22 +103,36 @@ export function DashboardPage() {
           setSelectedAssessmentId(chosen);
           setActiveAssessmentId(chosen);
         } else {
-          setSelectedAssessmentId(currentActive || 'assessment-ref-case');
+          // No assessments found for company -> clean exit from loading skeleton
+          setSelectedAssessmentId('');
+          setMetrics(null);
+          setLoading(false);
         }
       } catch (err) {
         console.warn('Failed to load assessments for company:', err);
-        setSelectedAssessmentId(getActiveAssessmentId());
+        if (isMounted) {
+          setSelectedAssessmentId('');
+          setMetrics(null);
+          setLoading(false);
+        }
       }
     }
     loadAssessments();
+    return () => { isMounted = false; };
   }, [selectedCompanyId]);
 
   // Load telemetry data whenever the active assessment changes
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (overrideId) => {
+    const activeId = overrideId || selectedAssessmentId || getActiveAssessmentId();
+    if (!activeId) {
+      setMetrics(null);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      const activeId = selectedAssessmentId || getActiveAssessmentId();
       const data = await dashboardService.getDashboardMetrics(activeId);
       if (!data || !data.assessment) {
         setMetrics(null);
@@ -117,6 +142,7 @@ export function DashboardPage() {
     } catch (err) {
       setError(err.message || 'Failed to load executive telemetry');
       showToast(`Dashboard error: ${err.message}`, 'danger');
+      setMetrics(null);
     } finally {
       setLoading(false);
     }
@@ -124,9 +150,13 @@ export function DashboardPage() {
 
   useEffect(() => {
     if (selectedAssessmentId) {
-      loadData();
+      loadData(selectedAssessmentId);
     }
-    const handleRefresh = () => loadData();
+    const handleRefresh = () => {
+      if (selectedAssessmentId) {
+        loadData(selectedAssessmentId);
+      }
+    };
     window.addEventListener('saas:data_refreshed', handleRefresh);
     return () => window.removeEventListener('saas:data_refreshed', handleRefresh);
   }, [loadData, selectedAssessmentId]);
@@ -241,7 +271,7 @@ export function DashboardPage() {
     );
   }
 
-  const { assessment, legacyCount, overallRiskLevel, risks, plan, recommendations, postGoLive } = metrics;
+  const { assessment, legacyCount, overallRiskLevel, risks, plan, recommendations } = metrics;
   const topRec = recommendations && recommendations.length > 0 ? recommendations[0] : null;
 
   // Derive upcoming milestones from the 8-phase plan

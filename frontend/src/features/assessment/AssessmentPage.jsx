@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
   Building,
-  Server,
   Layers,
   Sliders,
   CheckCircle,
@@ -13,15 +12,10 @@ import {
   X,
   ArrowRight,
   ArrowLeft,
-  HelpCircle,
-  TrendingUp,
-  ShieldAlert,
   Award,
-  ListChecks,
-  Compass
+  ListChecks
 } from 'lucide-react';
 import { Button } from '../../components/Button';
-import { Badge } from '../../components/Badge';
 import { Modal } from '../../components/Modal';
 import { assessmentService } from '../../services/assessmentService';
 import { calculateReadiness } from '../../lib/readiness';

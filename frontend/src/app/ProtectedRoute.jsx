@@ -11,16 +11,27 @@ export function ProtectedRoute({ children }) {
     let unsubscribe;
 
     async function checkAuth() {
-      const current = await authService.getCurrentUser();
-      setUser(current);
-      setLoading(false);
+      try {
+        const current = await authService.getCurrentUser();
+        setUser(current);
+      } catch (err) {
+        console.error('ProtectedRoute checkAuth error:', err);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
     }
 
     checkAuth();
 
-    unsubscribe = authService.onAuthStateChange((_event, updatedUser) => {
-      setUser(updatedUser);
-    });
+    try {
+      unsubscribe = authService.onAuthStateChange((_event, updatedUser) => {
+        setUser(updatedUser);
+        setLoading(false);
+      });
+    } catch {
+      // ignore
+    }
 
     return () => {
       if (typeof unsubscribe === 'function') {

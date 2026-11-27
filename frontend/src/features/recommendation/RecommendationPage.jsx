@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Sliders, RefreshCw, RotateCcw, Award, Check, ExternalLink, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Sliders, RefreshCw, RotateCcw } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Badge } from '../../components/Badge';
