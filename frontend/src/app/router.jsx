@@ -1,6 +1,8 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { Layout } from './Layout';
 import { NotFound } from './NotFound';
+import { ProtectedRoute } from './ProtectedRoute';
+import { AuthPage } from '../features/auth/AuthPage';
 
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { AssessmentPage } from '../features/assessment/AssessmentPage';
@@ -15,10 +17,9 @@ import { SettingsPage } from '../features/settings/SettingsPage';
 import { HealthPage } from '../features/health/HealthPage';
 
 export const router = createBrowserRouter([
-  // Redirect legacy /login directly into the application
   {
     path: '/login',
-    element: <Navigate to="/dashboard" replace />
+    element: <AuthPage />
   },
   {
     path: '/health',
@@ -26,7 +27,11 @@ export const router = createBrowserRouter([
   },
   {
     path: '/',
-    element: <Layout />,
+    element: (
+      <ProtectedRoute>
+        <Layout />
+      </ProtectedRoute>
+    ),
     errorElement: <NotFound />,
     children: [
       {

@@ -1,6 +1,7 @@
 import { supabase, shouldUseMocks } from '../lib/supabase';
 import referenceCase from '../data/referenceCase.json';
 import { calculateReadiness } from '../lib/readiness';
+import { getActiveCompanyId } from '../lib/activeAssessment';
 
 const ASSESSMENTS_KEY = 'saas_assessments_data';
 
@@ -71,13 +72,14 @@ function mapAssessmentFromPostgres(row, legacyApps = [], requirements = []) {
 }
 
 export const assessmentService = {
-  async getAssessments(companyId = 'comp-apex-global') {
+  async getAssessments(companyId) {
+    const targetCompanyId = companyId || getActiveCompanyId();
     if (!shouldUseMocks()) {
       try {
         const { data, error } = await supabase
           .from('assessments')
           .select('*, legacy_applications(*), requirements(*)')
-          .eq('company_id', companyId);
+          .eq('company_id', targetCompanyId);
 
         if (!error && data && data.length > 0) {
           return data.map(item => 
@@ -139,12 +141,15 @@ export const assessmentService = {
       legacyAppsCount: legacyApps.length
     });
 
+    const activeCompanyId = getActiveCompanyId();
+    const targetCompanyId = payload.company_ID || payload.company_id || activeCompanyId;
+
     const record = {
       ID: id,
       id: id,
       title: payload.title || 'Enterprise SaaS Transformation Assessment',
-      company_ID: payload.company_ID || payload.company_id || 'comp-apex-global',
-      company_id: payload.company_ID || payload.company_id || 'comp-apex-global',
+      company_ID: targetCompanyId,
+      company_id: targetCompanyId,
       infrastructure: payload.infrastructure || 'On-premise',
       growthRate: Number(payload.growthRate) || 18.0,
       dataSensitivity: payload.dataSensitivity || 'High',

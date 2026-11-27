@@ -25,6 +25,14 @@ export function AuthPage() {
   const { showToast } = useToast();
 
   useEffect(() => {
+    async function checkExistingAuth() {
+      const current = await authService.getCurrentUser();
+      if (current && (!isMockMode || localStorage.getItem('saas_auth_logged_out') !== 'true')) {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+    checkExistingAuth();
+
     async function loadCompanies() {
       try {
         const data = await companyService.getCompanies();
@@ -42,7 +50,7 @@ export function AuthPage() {
       setEmail('rishi.kumar@apexglobal.com');
       setPassword('Password123!');
     }
-  }, [isMockMode]);
+  }, [isMockMode, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -127,6 +135,48 @@ export function AuthPage() {
         <div className="p-6 pt-3">
           {tab === 'login' ? (
             <form onSubmit={handleLogin} className="space-y-4">
+              {isMockMode && (
+                <div className="p-3 bg-[#F4F7FA] border border-[#DCE5EA] rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-[#102B46] uppercase tracking-wider">Demo Quick Personas</span>
+                    <span className="text-[10px] bg-[#247C78]/10 text-[#247C78] px-1.5 py-0.5 rounded font-medium border border-[#247C78]/20">Mock Mode</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => { setEmail('rishi.kumar@apexglobal.com'); setPassword('Password123!'); }}
+                      className="text-left p-2 rounded-lg bg-white border border-[#DCE5EA] hover:border-[#247C78] text-[11px] transition text-[#102B46] shadow-sm"
+                    >
+                      <span className="font-semibold block truncate">Rishi Kumar</span>
+                      <span className="text-[10px] text-slate-500">Admin</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setEmail('aarushi.joshi@apexglobal.com'); setPassword('Password123!'); }}
+                      className="text-left p-2 rounded-lg bg-white border border-[#DCE5EA] hover:border-[#247C78] text-[11px] transition text-[#102B46] shadow-sm"
+                    >
+                      <span className="font-semibold block truncate">Aarushi Joshi</span>
+                      <span className="text-[10px] text-slate-500">Manager</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setEmail('pradyumn.bisen@apexglobal.com'); setPassword('Password123!'); }}
+                      className="text-left p-2 rounded-lg bg-white border border-[#DCE5EA] hover:border-[#247C78] text-[11px] transition text-[#102B46] shadow-sm"
+                    >
+                      <span className="font-semibold block truncate">Pradyumn Bisen</span>
+                      <span className="text-[10px] text-slate-500">Analyst</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setEmail('akshayadevi.k@apexglobal.com'); setPassword('Password123!'); }}
+                      className="text-left p-2 rounded-lg bg-white border border-[#DCE5EA] hover:border-[#247C78] text-[11px] transition text-[#102B46] shadow-sm"
+                    >
+                      <span className="font-semibold block truncate">Akshayadevi K</span>
+                      <span className="text-[10px] text-slate-500">Viewer</span>
+                    </button>
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-xs font-semibold text-[#102B46] mb-1.5">Corporate Email</label>
                 <input
@@ -203,7 +253,22 @@ export function AuthPage() {
                 />
               </div>
 
-
+              {companies.length > 0 && (
+                <div>
+                  <label className="block text-xs font-semibold text-[#102B46] mb-1.5">Organization</label>
+                  <select
+                    value={regCompany}
+                    onChange={(e) => setRegCompany(e.target.value)}
+                    className="w-full bg-[#F4F7FA] border border-[#DCE5EA] rounded-xl px-3.5 py-2 text-xs text-[#102B46] focus:outline-none focus:ring-2 focus:ring-[#247C78] focus:bg-white transition"
+                  >
+                    {companies.map((c) => (
+                      <option key={c.ID || c.id} value={c.ID || c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="pt-2">
                 <Button
