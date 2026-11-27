@@ -2,7 +2,27 @@ import { supabase, shouldUseMocks } from '../lib/supabase';
 import referenceCase from '../data/referenceCase.json';
 import { calculateReadiness } from '../lib/readiness';
 
-let assessmentsState = [referenceCase.assessment];
+const ASSESSMENTS_KEY = 'saas_assessments_data';
+
+function getStoredAssessments() {
+  if (typeof window === 'undefined') return [referenceCase.assessment];
+  const saved = localStorage.getItem(ASSESSMENTS_KEY);
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch {
+      // fallback
+    }
+  }
+  return [referenceCase.assessment];
+}
+
+function saveStoredAssessments(assessments) {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(ASSESSMENTS_KEY, JSON.stringify(assessments));
+  }
+}
 
 function mapAssessmentFromPostgres(row, legacyApps = [], requirements = []) {
   if (!row) return null;
@@ -69,7 +89,7 @@ export const assessmentService = {
       }
     }
 
-    return assessmentsState.filter(a => a.company_ID === companyId || a.company_id === companyId);
+    return getStoredAssessments().filter(a => a.company_ID === companyId || a.company_id === companyId);
   },
 
   async getAssessmentById(id = 'assessment-ref-case') {
@@ -105,7 +125,7 @@ export const assessmentService = {
       }
     }
 
-    const found = assessmentsState.find(a => a.ID === id || a.id === id);
+    const found = getStoredAssessments().find(a => a.ID === id || a.id === id);
     if (found) return found;
     return referenceCase.assessment;
   },
@@ -180,12 +200,14 @@ export const assessmentService = {
       }
     }
 
-    const existingIdx = assessmentsState.findIndex(a => a.ID === id || a.id === id);
+    const assessments = getStoredAssessments();
+    const existingIdx = assessments.findIndex(a => a.ID === id || a.id === id);
     if (existingIdx >= 0) {
-      assessmentsState[existingIdx] = record;
+      assessments[existingIdx] = record;
     } else {
-      assessmentsState.push(record);
+      assessments.push(record);
     }
+    saveStoredAssessments(assessments);
 
     return record;
   }
