@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -15,6 +15,21 @@ import {
   X
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { authService } from '../services/authService';
+
+function getInitials(name, email) {
+  if (name) {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  }
+  if (email) {
+    return email.slice(0, 2).toUpperCase();
+  }
+  return 'U';
+}
 
 const navSections = [
   {
@@ -51,6 +66,32 @@ const navSections = [
 ];
 
 export function Sidebar({ onClose }) {
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadUser() {
+      const u = await authService.getCurrentUser();
+      if (isMounted) setCurrentUser(u);
+    }
+    loadUser();
+
+    const handleUserChanged = (e) => {
+      if (isMounted) setCurrentUser(e.detail);
+    };
+    window.addEventListener('saas:user_changed', handleUserChanged);
+    window.addEventListener('saas:role_changed', handleUserChanged);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('saas:user_changed', handleUserChanged);
+      window.removeEventListener('saas:role_changed', handleUserChanged);
+    };
+  }, []);
+
+  const userName = currentUser?.fullName || currentUser?.email?.split('@')[0] || 'User';
+  const userEmail = currentUser?.email || 'Connected';
+  const userInitials = getInitials(currentUser?.fullName, currentUser?.email);
+
   return (
     <aside className="w-64 h-full bg-[#102B46] border-r border-[#0B1E32] flex flex-col shrink-0 text-white select-none shadow-xl lg:shadow-none">
       {/* Top Header Card in Sidebar */}
@@ -115,17 +156,22 @@ export function Sidebar({ onClose }) {
         ))}
       </nav>
 
-      {/* User profile footer at bottom of sidebar matching prototype */}
+      {/* User profile footer at bottom of sidebar matching active authenticated user */}
       <div className="p-3 border-t border-white/10 flex items-center justify-between text-xs bg-[#0C2237]">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-7 h-7 rounded-full bg-[#247C78] flex items-center justify-center text-white text-[10px] font-bold shrink-0">
-            AM
+            {userInitials}
           </div>
           <div className="min-w-0 leading-tight">
-            <div className="font-semibold text-white truncate text-[11px]">Alex Morgan</div>
-            <div className="text-[10px] text-slate-400 truncate">alex@company.com</div>
+            <div className="font-semibold text-white truncate text-[11px]">{userName}</div>
+            <div className="text-[10px] text-slate-400 truncate">{userEmail}</div>
           </div>
         </div>
+        {currentUser?.role && (
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#247C78]/20 text-[#68D391] border border-[#247C78]/30 shrink-0">
+            {currentUser.role}
+          </span>
+        )}
       </div>
     </aside>
   );

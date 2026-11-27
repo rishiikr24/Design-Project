@@ -13,9 +13,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { RefreshCw, CheckCircle2, AlertTriangle, XCircle, ShieldCheck, Database, Cpu, Globe } from 'lucide-react';
+import { RefreshCw, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 import { supabase, isSupabaseConfigured, shouldUseMocks } from '../../lib/supabase';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Badge } from '../../components/Badge';
 
@@ -43,7 +42,6 @@ export function HealthPage() {
 
   const runDiagnostics = async () => {
     setChecking(true);
-    const start = performance.now();
 
     const rawUrl = import.meta.env.VITE_SUPABASE_URL || '';
     const rawKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -96,7 +94,7 @@ export function HealthPage() {
     // 1. Auth Reachability Test
     const authStart = performance.now();
     try {
-      const { data, error } = await supabase.auth.getSession();
+      const { error } = await supabase.auth.getSession();
       result.authLatencyMs = Math.round(performance.now() - authStart);
       if (error) {
         result.authError = error.message;
@@ -111,7 +109,7 @@ export function HealthPage() {
     // 2. Database Reachability Test
     const dbStart = performance.now();
     try {
-      const { data, error, count } = await supabase
+      const { data, error } = await supabase
         .from('companies')
         .select('id, name', { count: 'exact', head: false })
         .limit(5);
@@ -131,7 +129,7 @@ export function HealthPage() {
     // 3. Edge Functions Reachability Test
     const edgeStart = performance.now();
     try {
-      const { data, error } = await supabase.functions.invoke('dashboard-metrics', {
+      const { error } = await supabase.functions.invoke('dashboard-metrics', {
         body: { company_id: 'comp-apex-global' }
       });
       result.edgeFunctionsLatencyMs = Math.round(performance.now() - edgeStart);

@@ -9,19 +9,12 @@ import {
   Server,
   DollarSign,
   Layers,
-  Check,
   X,
-  SlidersHorizontal,
-  Scale,
-  Sparkles,
-  ArrowRight,
-  Info
+  Scale
 } from 'lucide-react';
 import { Button } from '../../components/Button';
-import { Badge } from '../../components/Badge';
 import { Modal } from '../../components/Modal';
 import { catalogService } from '../../services/catalogService';
-import { authService } from '../../services/authService';
 import { useToast } from '../../components/Toast';
 
 const CATEGORIES = ['All', 'ERP', 'CRM', 'HCM', 'ITSM', 'Productivity', 'Analytics', 'Identity'];
@@ -79,6 +72,7 @@ export function CatalogPage() {
 
   useEffect(() => {
     loadProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Filter & Search Logic
