@@ -552,6 +552,49 @@ export function DashboardPage() {
         </div>
       </div>
 
+      {/* Post-Go-Live Telemetry Visualizer */}
+      {telemetryChartData.length > 0 && (
+        <div className="bg-white rounded-xl border border-[#DCE5EA] p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+            <div>
+              <h3 className="text-sm font-bold text-[#102B46]">Post-Go-Live Telemetry & Value Realization</h3>
+              <p className="text-xs text-[#718096]">
+                Target adoption velocity, cost efficiency dividends, and SaaS license utilization benchmarks
+              </p>
+            </div>
+            <span className="text-[11px] font-semibold text-[#718096] bg-[#F4F7FA] px-2.5 py-1 rounded-full border border-[#DCE5EA]">
+              Simulated reference values
+            </span>
+          </div>
+
+          <div className="h-56 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={telemetryChartData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                <XAxis dataKey="metric" stroke="#718096" fontSize={11} interval={0} />
+                <YAxis domain={[0, 100]} stroke="#718096" fontSize={11} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#DCE5EA', borderRadius: '0.5rem', fontSize: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                  formatter={(val) => [`${val}%`, 'Actual']}
+                />
+                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                  {telemetryChartData.map((entry, index) => (
+                    <Cell key={`cell-telemetry-${index}`} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex justify-around items-center pt-3 border-t border-[#DCE5EA] text-xs text-[#718096]">
+            {telemetryChartData.map((item) => (
+              <div key={item.metric} className="text-center">
+                <span className="block font-bold text-[#102B46]">{item.value}%</span>
+                <span className="text-[10px] text-[#718096]">{item.metric} (Benchmark: {item.benchmark}%)</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Secondary Row: Top SaaS Recommendation Spotlight & Evaluated Risks */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Spotlight Recommendation Solution */}
