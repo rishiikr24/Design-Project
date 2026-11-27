@@ -29,7 +29,7 @@ function normalizeUser(rawUser, metadata = {}) {
   const meta = { ...(rawUser.user_metadata || {}), ...(metadata || {}) };
   const email = rawUser.email || meta.email || '';
   const fullName = meta.full_name || meta.fullName || rawUser.fullName || email.split('@')[0];
-  const role = meta.role || rawUser.role || 'Viewer';
+  const role = meta.role || rawUser.role || 'admin';
   const companyId = meta.company_id || meta.company_ID || rawUser.company_ID || rawUser.company_id || 'comp-apex-global';
   const id = rawUser.id || rawUser.ID || `usr-${Date.now()}`;
 
@@ -100,7 +100,7 @@ export const authService = {
             company_id: profile.company_id
           } : {
             full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0],
-            role: user.user_metadata?.role || 'Viewer',
+            role: user.user_metadata?.role || 'admin',
             company_id: user.user_metadata?.company_id || 'comp-apex-global'
           };
 
@@ -129,7 +129,9 @@ export const authService = {
       if (stored) {
         try {
           return JSON.parse(stored);
-        } catch {}
+        } catch {
+          // ignore corrupted JSON
+        }
       }
     }
 
@@ -165,7 +167,7 @@ export const authService = {
           company_id: profile.company_id
         } : {
           full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email?.split('@')[0],
-          role: data.user.user_metadata?.role || 'Viewer',
+          role: data.user.user_metadata?.role || 'admin',
           company_id: data.user.user_metadata?.company_id || 'comp-apex-global'
         };
         const user = normalizeUser(data.user, profileMeta);
@@ -370,7 +372,7 @@ export const authService = {
             company_id: profile.company_id
           } : {
             full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0],
-            role: session.user.user_metadata?.role || 'Viewer',
+            role: session.user.user_metadata?.role || 'admin',
             company_id: session.user.user_metadata?.company_id || 'comp-apex-global'
           };
           const user = normalizeUser(session.user, profileMeta);

@@ -36,7 +36,8 @@ The platform evaluates enterprise candidates (e.g., Salesforce, Microsoft Dynami
 - **Frontend SPA:** [React 18](https://react.dev/), [Vite](https://vitejs.dev/), [Tailwind CSS](https://tailwindcss.com/), [React Router v6](https://reactrouter.com/), [Lucide Icons](https://lucide.dev/), [Recharts](https://recharts.org/)
 - **Data & Auth Tier:** [Supabase](https://supabase.com/) (PostgreSQL 15+, Supabase Auth with Row-Level Security, PostgREST API)
 - **Serverless Compute:** Supabase Edge Functions (Deno / TypeScript)
-- **Unit & Integration Testing:** [Vitest](https://vitest.dev/), React Testing Library (56 passing automated unit tests)
+- **Unit & Integration Testing:** [Vitest](https://vitest.dev/), React Testing Library (**74 passing automated tests** across 15 test suites)
+- **Archived Prototype:** `legacy-sap/` preserves the original SAP Cloud Application Programming (CAP) / SAPUI5 initial prototype, which was successfully transformed and migrated to this production-ready React 18 + Supabase architecture.
 
 ---
 
@@ -77,7 +78,7 @@ Every capability from the original enterprise blueprint is implemented and cover
 │   │   │   └── risk/             # 5x5 Risk Exposure Heatmap
 │   │   ├── lib/                  # Core algorithms (scoring, risk, readiness, planner)
 │   │   ├── services/             # Data access layer (Supabase SDK with mock fallback)
-│   │   └── test/                 # 56 Vitest unit tests
+│   │   └── test/                 # 74 Vitest unit & integration tests
 │   ├── package.json
 │   └── vite.config.js
 ├── supabase/                     # Supabase Backend & Compute
@@ -99,37 +100,63 @@ Every capability from the original enterprise blueprint is implemented and cover
 
 ---
 
-## 4. Getting Started
+## 4. Getting Started & Running Modes
 
 ### Prerequisites
 - **Node.js** (v18 or higher)
 - **npm** (v9 or higher)
 
-### 4.1 Running the Frontend
+### 4.1 Running in Live Mode (Hosted Supabase Backend)
+In Live Mode, the application communicates directly with your hosted Supabase instance (PostgreSQL database, real Supabase Auth, and Row-Level Security).
+
 ```bash
-# Navigate to frontend directory
+# 1. Navigate to frontend directory
 cd frontend
 
-# Install dependencies
-npm install
+# 2. Configure frontend/.env.local with your Supabase credentials:
+# VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co
+# VITE_SUPABASE_ANON_KEY=<your-anon-key>
+# VITE_USE_MOCKS=false
 
-# Start development server
+# 3. Start the dev server in live mode
 npm run dev
-# The dev server runs at http://localhost:3000
 
-# Or build and run production preview
-npm run build
-npm run preview
-# The preview server runs at http://localhost:3000
+# 4. Access the app in your browser:
+# http://localhost:3000
+# Sign in or register with real credentials (e.g. admin@nirnay.app).
 ```
 
-### 4.2 Running Tests
+### 4.2 Running in Mock Mode (Offline In-Memory Demo)
+Mock Mode bypasses external network requirements and runs entirely in-memory with `localStorage` persistence, enabling fully deterministic faculty demonstrations and automated testing.
+
 ```bash
-# Run the 56 Vitest unit tests
+# 1. Navigate to frontend directory
+cd frontend
+
+# 2. Run with mock mode enabled
+VITE_USE_MOCKS=true npm run dev
+
+# On Windows PowerShell:
+# $env:VITE_USE_MOCKS="true"; npm run dev
+
+# 3. Access the app at http://localhost:3000
+# Uses pre-seeded enterprise accounts (e.g., Rishi Kumar - Admin) and reference migration case.
+```
+
+### 4.3 Running Tests & Verification
+```bash
+# Run all 74 Vitest unit and integration tests
 npm --prefix frontend test
 
-# Run ESLint validation
-npm --prefix frontend run lint
+# Or run vitest directly inside frontend/
+cd frontend
+npx vitest run
+
+# Run ESLint validation (0 errors, 0 warnings)
+npm run lint
+
+# Build for production
+npm run build
 ```
 
 ---

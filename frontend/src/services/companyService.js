@@ -1,6 +1,5 @@
 import { supabase, shouldUseMocks } from '../lib/supabase';
 import initialCompanies from '../data/companies.json';
-import initialUsers from '../data/users.json';
 import { authService } from './authService';
 import { assessmentService } from './assessmentService';
 

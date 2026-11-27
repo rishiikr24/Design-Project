@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   RefreshCw,
@@ -18,9 +18,7 @@ import {
   ExternalLink,
   ChevronRight,
   Building2,
-  CheckCircle2,
-  CheckCircle,
-  HelpCircle
+  CheckCircle2
 } from 'lucide-react';
 import {
   BarChart,
@@ -36,8 +34,6 @@ import {
   PolarRadiusAxis,
   Radar
 } from 'recharts';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../../components/Card';
-import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
 import { Modal } from '../../components/Modal';
 import { dashboardService } from '../../services/dashboardService';
@@ -275,7 +271,7 @@ export function DashboardPage() {
     );
   }
 
-  const { assessment, legacyCount, overallRiskLevel, risks, plan, recommendations, postGoLive } = metrics;
+  const { assessment, legacyCount, overallRiskLevel, risks, plan, recommendations } = metrics;
   const topRec = recommendations && recommendations.length > 0 ? recommendations[0] : null;
 
   // Derive upcoming milestones from the 8-phase plan

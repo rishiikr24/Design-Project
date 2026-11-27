@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Building2, Users, Edit3, Plus, UserPlus, Check, X, FileText, ChevronRight, Activity } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '../../components/Card';
-import { Badge } from '../../components/Badge';
+import { Building2, Users, Edit3, Plus, UserPlus, Check, X, Activity } from 'lucide-react';
 import { Button } from '../../components/Button';
 import { Modal } from '../../components/Modal';
 import { companyService } from '../../services/companyService';
@@ -165,11 +163,6 @@ export function CompanyPage() {
       </div>
     );
   }
-
-  const activeCompanyUsers = data.users.filter(
-    u => u.company_ID === (selectedCompany?.ID || selectedCompany?.id) ||
-         u.company_id === (selectedCompany?.ID || selectedCompany?.id)
-  );
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">

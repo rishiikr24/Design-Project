@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Printer, Download, Calendar, Building2, Award, TrendingUp, Layers, CheckCircle2 } from 'lucide-react';
+import { FileText, Printer, Download } from 'lucide-react';
 import { PageHeader } from '../../components/PageHeader';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Badge } from '../../components/Badge';
 import { dashboardService } from '../../services/dashboardService';
-import { companyService } from '../../services/companyService';
 import { formatCurrency, formatNumber } from '../../lib/utils';
 import { useToast } from '../../components/Toast';
 import { getActiveAssessmentId } from '../../lib/activeAssessment';

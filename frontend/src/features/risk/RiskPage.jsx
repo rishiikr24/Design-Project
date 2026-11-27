@@ -1,13 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   RefreshCw,
   Plus,
   Trash2,
   Edit2,
-  ShieldAlert,
-  AlertTriangle,
-  CheckCircle2,
-  X,
   AlertCircle
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../../components/Card';
@@ -188,7 +184,7 @@ export function RiskPage() {
     );
   }
 
-  const { risks = [], summary = {}, budgetAnalysis = {} } = riskData || {};
+  const { risks = [], budgetAnalysis = {} } = riskData || {};
 
   const renderHeatmapGrid = () => {
     const rows = [];
