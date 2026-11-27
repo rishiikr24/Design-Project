@@ -152,14 +152,16 @@ export const catalogService = {
           .select()
           .single();
 
-        if (!error && data) {
+        if (error) {
+          newProduct._syncError = error.message;
+        } else if (data) {
           const mapped = mapProductFromPostgres(data);
           const current = getStoredProducts();
           saveStoredProducts([mapped, ...current.filter(p => (p.ID || p.id) !== mapped.id)]);
           return mapped;
         }
-      } catch {
-        // Fallback to local
+      } catch (err) {
+        newProduct._syncError = err.message;
       }
     }
 

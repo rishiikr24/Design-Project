@@ -156,7 +156,7 @@ export const plannerService = {
       try {
         const planId = planState.ID || planState.id;
         if (planId) {
-          await supabase
+          const { error: phaseErr } = await supabase
             .from('migration_phases')
             .update({
               status: phase.status,
@@ -165,15 +165,21 @@ export const plannerService = {
             .eq('plan_id', planId)
             .eq('sequence', Number(phaseSequence));
 
-          await supabase
+          const { error: planErr } = await supabase
             .from('migration_plans')
             .update({
               overall_progress: planState.overallProgress
             })
             .eq('id', planId);
+
+          if (phaseErr || planErr) {
+            planState._syncError = (phaseErr || planErr).message;
+          } else {
+            delete planState._syncError;
+          }
         }
-      } catch {
-        // Continue with in-memory state
+      } catch (err) {
+        planState._syncError = err.message;
       }
     }
 

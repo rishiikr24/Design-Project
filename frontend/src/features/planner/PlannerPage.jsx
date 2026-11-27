@@ -80,7 +80,11 @@ export function PlannerPage() {
         overallProgress: result.overallProgress,
         phases: prev.phases.map((p) => (p.sequence === seq ? { ...p, ...updates } : p))
       }));
-      showToast(`Updated Phase ${seq} (${result.overallProgress}% overall)`, 'success');
+      if (result._syncError) {
+        showToast(`Not saved to database: ${result._syncError}. Saved locally, not synced.`, 'warning');
+      } else {
+        showToast(`Updated Phase ${seq} (${result.overallProgress}% overall)`, 'success');
+      }
       window.dispatchEvent(new CustomEvent('saas:data_refreshed'));
     } catch (err) {
       showToast(`Error updating phase: ${err.message}`, 'danger');

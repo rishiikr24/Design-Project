@@ -138,12 +138,14 @@ export const companyService = {
           console.warn('[CompanyService] Supabase insert blocked by RLS, falling back to local persistence:', error.message);
           // If RLS blocked because user is not admin in Supabase auth, persist locally so user flow succeeds seamlessly
           const companies = getStoredCompanies();
+          newComp._syncError = error.message;
           companies.push(newComp);
           saveStoredCompanies(companies);
           return newComp;
         }
       } catch (err) {
         console.warn('[CompanyService] Network/RLS error, saving locally:', err.message);
+        newComp._syncError = err.message;
       }
     }
 
@@ -185,11 +187,13 @@ export const companyService = {
           .select()
           .single();
 
-        if (!error && data) {
+        if (error) {
+          if (updatedLocal) updatedLocal._syncError = error.message;
+        } else if (data) {
           return mapCompanyFromPostgres(data);
         }
-      } catch {
-        // Fallback to local update
+      } catch (err) {
+        if (updatedLocal) updatedLocal._syncError = err.message;
       }
     }
 

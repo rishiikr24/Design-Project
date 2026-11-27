@@ -278,7 +278,11 @@ export function AssessmentPage() {
         id: assessmentId
       });
       setActiveAssessmentId(saved.id || saved.ID);
-      showToast(`Assessment submitted! TOE Score: ${saved.readinessScore}/100`, 'success');
+      if (saved._syncError) {
+        showToast(`Not saved to database: ${saved._syncError}. Saved locally, not synced.`, 'warning');
+      } else {
+        showToast(`Assessment submitted! TOE Score: ${saved.readinessScore}/100`, 'success');
+      }
       localStorage.removeItem('saas_assessment_draft');
       window.dispatchEvent(new CustomEvent('saas:data_refreshed'));
       setStep(5);

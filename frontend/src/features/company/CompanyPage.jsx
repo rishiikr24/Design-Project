@@ -89,8 +89,12 @@ export function CompanyPage() {
     e.preventDefault();
     if (!editingCompany) return;
     try {
-      await companyService.updateCompany(editingCompany.ID || editingCompany.id, editingCompany);
-      showToast(`Updated organization ${editingCompany.name}`, 'success');
+      const updated = await companyService.updateCompany(editingCompany.ID || editingCompany.id, editingCompany);
+      if (updated?._syncError) {
+        showToast(`Not saved to database: ${updated._syncError}. Saved locally, not synced.`, 'warning');
+      } else {
+        showToast(`Updated organization ${editingCompany.name}`, 'success');
+      }
       setEditingCompany(null);
       loadData();
     } catch (err) {
@@ -106,7 +110,11 @@ export function CompanyPage() {
     }
     try {
       const created = await companyService.createCompany(newCompanyForm);
-      showToast(`Created organization ${created.name}`, 'success');
+      if (created._syncError) {
+        showToast(`Not saved to database: ${created._syncError}. Saved locally, not synced.`, 'warning');
+      } else {
+        showToast(`Created organization ${created.name}`, 'success');
+      }
       setIsCreateCompanyModalOpen(false);
       setNewCompanyForm({
         name: '',

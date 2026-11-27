@@ -163,7 +163,7 @@ export const assessmentService = {
     if (!shouldUseMocks()) {
       try {
         // Upsert assessment in Supabase
-        await supabase
+        const { error: assessErr } = await supabase
           .from('assessments')
           .upsert({
             id: record.id,
@@ -181,8 +181,12 @@ export const assessmentService = {
             status: record.status
           });
 
+        if (assessErr) {
+          record._syncError = assessErr.message;
+        }
+
         // Sync legacy applications
-        if (legacyApps.length > 0) {
+        if (legacyApps.length > 0 && !assessErr) {
           const appsToUpsert = legacyApps.map(app => ({
             id: app.ID || app.id || `leg-app-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
             assessment_id: record.id,
@@ -194,10 +198,13 @@ export const assessmentService = {
             years_in_use: Number(app.yearsInUse) || 0
           }));
 
-          await supabase.from('legacy_applications').upsert(appsToUpsert);
+          const { error: appsErr } = await supabase.from('legacy_applications').upsert(appsToUpsert);
+          if (appsErr && !record._syncError) {
+            record._syncError = appsErr.message;
+          }
         }
-      } catch {
-        // Continue and save to local state
+      } catch (err) {
+        record._syncError = err.message;
       }
     }
 
