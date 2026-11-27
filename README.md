@@ -2,7 +2,7 @@
 
 > **Modern Enterprise Cloud Decision-Support System**  
 > Developed as part of the **E1CSA313 / E1ITA306 Design Project - I** at Alliance University.  
-> **Team Members:** Rishi Kumar, Aarushi Joshi, Pradyumn Bisen, Akshayadevi k
+> **Team Members:** Rishi Kumar, Aarushi Joshi, Pradyumn Bisen, Akshayadevi K  
 > **Mentor:** Dr. T Prashant
 
 ---
