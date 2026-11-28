@@ -14,7 +14,12 @@
 
 The platform supports both **Live Hosted Supabase Mode** and **Deterministic Offline Mock Mode**.
 
-### Option A: Live Supabase Mode (Recommended for Full Evaluation)
+### Option 0: Live Production Deployment (Zero Setup)
+Directly demonstrate the live production application hosted on Vercel:
+- **Production URL:** [https://design-project-mu-wheat.vercel.app](https://design-project-mu-wheat.vercel.app)
+- Connected to live Supabase backend and automated CI/CD from GitHub.
+
+### Option A: Live Supabase Mode (Local Dev)
 Ensure `frontend/.env.local` contains your active Supabase URL and anon key with `VITE_USE_MOCKS=false`.
 ```bash
 cd frontend
