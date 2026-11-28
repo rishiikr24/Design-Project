@@ -1,5 +1,8 @@
+
 # NIRNAY: Enterprise SaaS Transformation Platform
+
 ## Selected Core Source Codes for Academic Project Report
+
 **Project Title**: NIRNAY — Enterprise Decision-Support & SaaS Migration Readiness Platform  
 **Authors**: Rishi Kumar, Aarushi Joshi, Pradyumn Bisen, Akshayadevi K.  
 **Tech Stack**: React 18, Vite, Tailwind CSS, Recharts, PostgreSQL / Supabase, Vitest  
@@ -7,6 +10,7 @@
 ---
 
 ### Table of Contents
+
 1. **Module 1: Technology-Organization-Environment (TOE) Readiness Engine** (`frontend/src/lib/readiness.js`)
 2. **Module 2: Multi-Criteria SaaS Evaluation & Decision Scoring Engine** (`frontend/src/lib/scoring.js`)
 3. **Module 3: AI Transformation Advisor Context-Aware Inference Engine** (`frontend/src/lib/assistant.js`)

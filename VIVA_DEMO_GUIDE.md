@@ -189,7 +189,7 @@ Follow this structured 6-step walkthrough to systematically demonstrate every re
 
 ## 4. Key Verification Metrics
 
-- **Total Passing Automated Unit Tests:** 77 tests across 16 test suites (`npx vitest run`)
+- **Total Passing Automated Unit Tests:** 82 tests across 17 test suites (`npx vitest run`)
 - **ESLint Code Quality:** 0 errors, 0 warnings (`npm run lint`)
 - **Production Build:** Vite production bundle passes in under 8 seconds (`npm run build`)
 - **Git Branch Status:** Clean working tree on `live-auth`, merged into `migrate/react-supabase` and `main`

@@ -317,13 +317,48 @@ export const authService = {
   async resetPassword(email) {
     if (!email) throw new Error('Email is required');
     if (!shouldUseMocks()) {
+      const redirectOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/login?type=recovery`
+        redirectTo: `${redirectOrigin}/reset-password`
       });
       if (error) throw new Error(error.message);
       return true;
     }
     return true;
+  },
+
+  async signInWithGoogle() {
+    if (!shouldUseMocks()) {
+      const redirectOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${redirectOrigin}/dashboard`
+        }
+      });
+      if (error) throw new Error(error.message);
+      return data;
+    }
+
+    // Mock Mode: Google sign-in simulation
+    const mockGoogleUser = {
+      ID: 'usr-google-demo',
+      id: 'usr-google-demo',
+      username: 'google.demo',
+      fullName: 'Google Demo User',
+      email: 'demo.user@gmail.com',
+      role: 'Admin',
+      company_ID: 'comp-apex-global',
+      company_id: 'comp-apex-global'
+    };
+
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('saas_auth_logged_out');
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(mockGoogleUser));
+      window.dispatchEvent(new CustomEvent('saas:role_changed', { detail: mockGoogleUser }));
+      window.dispatchEvent(new CustomEvent('saas:user_changed', { detail: mockGoogleUser }));
+    }
+    return mockGoogleUser;
   },
 
   async updateUserPassword(newPassword) {

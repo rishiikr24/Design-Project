@@ -1,8 +1,11 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 import { Layout } from './Layout';
 import { NotFound } from './NotFound';
 import { ProtectedRoute } from './ProtectedRoute';
 import { AuthPage } from '../features/auth/AuthPage';
+import { ResetPasswordPage } from '../features/auth/ResetPasswordPage';
+import { LandingPage } from '../features/landing/LandingPage';
+import { AboutPage } from '../features/landing/AboutPage';
 
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { AssessmentPage } from '../features/assessment/AssessmentPage';
@@ -17,16 +20,30 @@ import { SettingsPage } from '../features/settings/SettingsPage';
 import { HealthPage } from '../features/health/HealthPage';
 
 export const router = createBrowserRouter([
+  // Public Landing and Marketing Routes
+  {
+    path: '/',
+    element: <LandingPage />
+  },
+  {
+    path: '/about',
+    element: <AboutPage />
+  },
   {
     path: '/login',
     element: <AuthPage />
   },
   {
+    path: '/reset-password',
+    element: <ResetPasswordPage />
+  },
+  {
     path: '/health',
     element: <HealthPage />
   },
+
+  // Protected Enterprise Workspace Routes
   {
-    path: '/',
     element: (
       <ProtectedRoute>
         <Layout />
@@ -35,47 +52,43 @@ export const router = createBrowserRouter([
     errorElement: <NotFound />,
     children: [
       {
-        index: true,
-        element: <Navigate to="/dashboard" replace />
-      },
-      {
-        path: 'dashboard',
+        path: '/dashboard',
         element: <DashboardPage />
       },
       {
-        path: 'assessment',
+        path: '/assessment',
         element: <AssessmentPage />
       },
       {
-        path: 'catalog',
+        path: '/catalog',
         element: <CatalogPage />
       },
       {
-        path: 'recommendation',
+        path: '/recommendation',
         element: <RecommendationPage />
       },
       {
-        path: 'risk',
+        path: '/risk',
         element: <RiskPage />
       },
       {
-        path: 'planner',
+        path: '/planner',
         element: <PlannerPage />
       },
       {
-        path: 'assistant',
+        path: '/assistant',
         element: <AssistantPage />
       },
       {
-        path: 'company',
+        path: '/company',
         element: <CompanyPage />
       },
       {
-        path: 'reports',
+        path: '/reports',
         element: <ReportsPage />
       },
       {
-        path: 'settings',
+        path: '/settings',
         element: <SettingsPage />
       },
       {

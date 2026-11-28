@@ -50,7 +50,7 @@ export function Topbar({ onToggleSidebar }) {
     try {
       await authService.logout();
       showToast('Signed out successfully', 'info');
-      navigate('/login', { replace: true });
+      navigate('/', { replace: true });
     } catch (err) {
       showToast(`Sign out failed: ${err.message}`, 'danger');
     }
